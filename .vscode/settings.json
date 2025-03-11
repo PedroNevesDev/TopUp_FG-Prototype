@@ -56,5 +56,5 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "FG_Prototype.sln"
+    "dotnet.defaultSolution": "TopUp_FG-Prototype.sln"
 }
