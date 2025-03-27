@@ -14818,9 +14818,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   bounceCount: 3
-  bounceLossMultiplier: 1.2
-  throwForce: 12
+  bounceLossMultiplier: 1.3
+  throwForce: 22
   bounceAngle: 90
+  additionalGravity: 120
+  collisionEffect: {fileID: 4067605730088931189, guid: 41881d43513c8ec4fb771b2e7c766f9e, type: 3}
 --- !u!54 &900703144525231684
 Rigidbody:
   m_ObjectHideFlags: 0

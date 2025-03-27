@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
@@ -8,6 +9,11 @@ public class FireballBehavior : DirectionalSpell
     public float throwForce = 15f; // Force with which to throw the object initially
     public float bounceAngle = 45f; // Angle between 0 and 90 degrees to control the bounce angle
     private Rigidbody rb;
+
+    public float additionalGravity = 20f;
+    public GameObject collisionEffect; // Assign your particle prefab in the Inspector
+
+    List<GameObject> objcs = new List<GameObject>();
 
     void Start()
     {
@@ -36,33 +42,30 @@ public class FireballBehavior : DirectionalSpell
 
     private void OnCollisionEnter(Collision collision)
     {
-        // If bounce count is greater than 0, handle bounce
+        if (collisionEffect != null)
+        {
+            Vector3 spawnPosition = collision.contacts[0].point + collision.contacts[0].normal * 0.1f; // Offset VFX slightly above surface
+            objcs.Add(Instantiate(collisionEffect, spawnPosition, Quaternion.LookRotation(collision.contacts[0].normal)));
+        }
+
         if (bounceCount > 0)
         {
-            // Get the normal vector of the surface the object collided with
             Vector3 contactNormal = collision.contacts[0].normal;
-
-            // Reflect the velocity based on the normal of the surface
             Vector3 reflectedVelocity = Vector3.Reflect(rb.linearVelocity, contactNormal);
-
-            // Apply bounce angle control: Modify the vertical (normal) component to achieve the desired bounce angle
             reflectedVelocity = ApplyBounceAngle(reflectedVelocity, contactNormal);
-
-            // Apply the bounce loss multiplier to reduce velocity after each bounce
             reflectedVelocity *= bounceLossMultiplier;
-
-            // Apply the reflected velocity to the rigidbody
             rb.linearVelocity = reflectedVelocity;
-
-            // Decrease the bounce count after each bounce
             bounceCount--;
-
         }
         else
         {
-            // Destroy the object once bounce count reaches 0
+            objcs.ForEach(obj=>Destroy(obj,1));
             Destroy(gameObject);
         }
+    }
+    void FixedUpdate()
+    {
+        rb.AddForce(Vector3.down * additionalGravity, ForceMode.Acceleration);
     }
 
     // Apply the bounce angle control
