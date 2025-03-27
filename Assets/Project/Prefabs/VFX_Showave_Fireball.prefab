@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 6221340128522420266}
   - component: {fileID: 7670619837424666480}
   - component: {fileID: 2011387445902284414}
+  - component: {fileID: 2969761650645325365}
   m_Layer: 0
   m_Name: VFX_Showave_Fireball
   m_TagString: Untagged
@@ -43,7 +44,7 @@ ParticleSystem:
   serializedVersion: 8
   lengthInSec: 0.1
   simulationSpeed: 1
-  stopAction: 2
+  stopAction: 3
   cullingMode: 0
   ringBufferMode: 0
   ringBufferLoopRange: {x: 0, y: 1}
@@ -4900,6 +4901,19 @@ ParticleSystemRenderer:
   m_MeshWeighting2: 1
   m_MeshWeighting3: 1
   m_MaskInteraction: 0
+--- !u!114 &2969761650645325365
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3885358416851559451}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63ebd97e44a534fb5bc044e324388f55, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetGameObject: {fileID: 4067605730088931189}
 --- !u!1 &4067605730088931189
 GameObject:
   m_ObjectHideFlags: 0
