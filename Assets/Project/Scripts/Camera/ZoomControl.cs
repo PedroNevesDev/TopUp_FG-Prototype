@@ -1,23 +1,24 @@
-
-using Unity.Cinemachine;
 using UnityEngine;
+using Unity.Cinemachine;
 
 public class ZoomControl : MonoBehaviour
 {
     public CinemachineFollow virtualCamera;
-    public float zoomSpeed = 1f; // Speed of zooming
-    public float minZoom = 2f;   // Minimum zoom distance
-    public float maxZoom = 10f;  // Maximum zoom distance
-    private float currentZoom = 5f; // Starting zoom value
-
-    private CinemachineFollow transposer; // Access Cinemachine Transposer for camera follow
+    public Transform cameraTransform; // Reference to the main camera
+    public float zoomSpeed = 1f;
+    public float minZoom = 2f;
+    public float maxZoom = 10f;
+    private float currentZoom = 5f;
+    private CinemachineFollow transposer;
     private Vector3 initialOffset;
+
+    public float rotationSpeed = 3f;
+    private Vector3 currentRotation;
 
     void Start()
     {
         if (virtualCamera != null)
         {
-            // Get the transposer component of the virtual camera
             transposer = GetComponent<CinemachineFollow>();
             if (transposer != null)
             {
@@ -28,23 +29,35 @@ public class ZoomControl : MonoBehaviour
 
     void Update()
     {
+        HandleZoom();
+        HandleRotation();
+    }
+
+    void HandleZoom()
+    {
         if (transposer != null)
         {
-            // Get the scroll input
             float scrollInput = Input.GetAxis("Mouse ScrollWheel");
-
-            // Adjust the zoom level based on scroll input
             if (scrollInput != 0f)
             {
-                // Calculate the new zoom level
                 currentZoom -= scrollInput * zoomSpeed;
-
-                // Clamp the zoom value to stay within the defined range
                 currentZoom = Mathf.Clamp(currentZoom, minZoom, maxZoom);
-
-                // Set the new follow offset based on the zoom level
                 transposer.FollowOffset = initialOffset.normalized * currentZoom;
             }
+        }
+    }
+
+    void HandleRotation()
+    {
+        if (Input.GetMouseButton(0)) // Left-click drag
+        {
+            float mouseX = Input.GetAxis("Mouse X") * rotationSpeed;
+            float mouseY = Input.GetAxis("Mouse Y") * rotationSpeed;
+
+            currentRotation.y += mouseX;
+            currentRotation.x = Mathf.Clamp(currentRotation.x - mouseY, -80f, 80f); // Prevent flipping
+
+            cameraTransform.rotation = Quaternion.Euler(currentRotation.x, currentRotation.y, 0);
         }
     }
 }
