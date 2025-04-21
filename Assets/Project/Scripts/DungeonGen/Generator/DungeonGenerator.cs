@@ -3,387 +3,190 @@ using System.Collections.Generic;
 
 public class DungeonGenerator : MonoBehaviour
 {
-    [Header("Dungeon Size")]
-    public int width = 10;
-    public int height = 1;
-    public int depth = 10;
+    [Header("Generation Settings")]
+    [SerializeField] int maxTileCount = 100;
+    [SerializeField] int tileDistance = 1;
+    [SerializeField] Vector3 scale = Vector3.one;
+    [SerializeField] Vector3 spawnOffset;
 
-    [Header("Tiles & Props")]
-    public List<DungeonGroundTileData> groundTiles;  // Ground tiles
-    public List<DungeonWallTileData> wallTiles;  // Wall tiles
-    public List<DungeonObjectTileData> dungeonObjects;  // Dungeon objects to place
+    [Header("Tile Prefab")]
+    [SerializeField] SuperTile superTilePrefab;
 
-    [Header("Settings")]
-    public bool hasWalls = true;
-    public float tileSize = 10f;
+    [Header("Texture Floor Data")]
+    [SerializeField] List<FloorData> floors;
 
-    private Dictionary<Vector3Int, GameObject> placedTiles = new();
-    private Dictionary<Vector3Int, TileReference> tileReferences = new();
-    private HashSet<Vector3Int> occupiedPlaceholders = new();
+    [Header("Procedural Options")]
+    [SerializeField] bool stopWhenStuck = true;
 
-    void Start() 
+    [Header("Special Object Prefabs")]
+    [SerializeField] GameObject enemyPrefab;
+    [SerializeField] GameObject healingPrefab;
+    [SerializeField] GameObject goldPrefab;
+    [SerializeField] GameObject hazardPrefab;
+    [SerializeField] GameObject shopPrefab;
+    [SerializeField] float specialSpawnYOffset = 0.5f;
+    [SerializeField] Transform player;
+
+    private Dictionary<Vector3Int, SuperTile> grid = new Dictionary<Vector3Int, SuperTile>();
+    private List<SuperTile> spawnedTiles = new List<SuperTile>();
+
+    void Start()
     {
-        GenerateDungeon();    
+        GenerateDungeon();
+    }
+
+    void OnValidate()
+    {
+        foreach (SuperTile tile in spawnedTiles)
+        {
+            if (tile != null)
+                tile.transform.localScale = scale;
+        }
     }
 
     public void GenerateDungeon()
     {
         ClearDungeon();
+        grid.Clear();
+        spawnedTiles.Clear();
 
-        // Ground pass
-        for (int y = 0; y < height; y++)
+        int baseY = 0;
+
+        foreach (var floor in floors)
         {
-            for (int z = 0; z < depth; z++)
-            {
-                for (int x = 0; x < width; x++)
-                {
-                    Vector3Int pos = new(x, y, z);
-                    var tileData = PickValidGroundTile(pos);
-                    if (tileData != null)
-                    {
-                        Vector3 worldPos = new(pos.x * tileSize, pos.y * tileSize, pos.z * tileSize);
-                        GameObject tile = Instantiate(tileData.prefab, worldPos, Quaternion.Euler(0, GetTileRotation(pos, tileData), 0), transform);
-                        tile.name = $"Tile_{x}_{y}_{z}";
-                        
-                        // Add reference component to track tile data
-                        var tileRef = tile.AddComponent<TileReference>();
-                        tileRef.groundTileData = tileData;
-                        
-                        placedTiles[pos] = tile;
-                        tileReferences[pos] = tileRef;
+            if (floor.layoutTexture == null) continue;
 
-                        PlaceObjectsOnTile(tile, tileData, pos);
-                    }
+            int texHeight = floor.layoutTexture.height;
+
+            for (int repeat = 0; repeat < floor.repeatCount; repeat++)
+            {
+                GenerateFloor(floor.layoutTexture, baseY);
+                baseY += tileDistance; // shift height for next repetition
+            }
+        }
+
+        foreach (var kvp in grid)
+        {
+            Vector3Int pos = kvp.Key;
+            SuperTile tile = kvp.Value;
+
+            foreach (Vector3Int dir in GetAllPossibleDirections())
+            {
+                Vector3Int neighborPos = pos + (dir * tileDistance);
+                if (grid.TryGetValue(neighborPos, out SuperTile neighbor))
+                {
+                    tile.Connect(neighbor, dir);
                 }
             }
         }
 
-        // Wall pass
-        if (hasWalls)
+        if (spawnedTiles.Count > 0)
         {
-            List<Vector3Int> keys = new(placedTiles.Keys);
-            foreach (var pos in keys)
-            {
-                if (!IsBorderTile(pos)) continue;
+            player.position = spawnedTiles[0].transform.position + new Vector3(0, 0.5f, 0);
+        }
+    }
 
-                var tileData = PickValidWallTile(pos);
-                if (tileData != null)
-                    PlaceWalls(pos, tileData);
+    void GenerateFloor(Texture2D layoutTexture, int yOffset)
+    {
+        int height = layoutTexture.height;
+        int width = layoutTexture.width;
+
+        for (int z = 0; z < height; z++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                Color pixel = layoutTexture.GetPixel(x, z);
+
+                if (pixel.grayscale > 0.5f)
+                {
+                    Vector3Int gridPos = new Vector3Int(x * tileDistance, yOffset, z * tileDistance);
+
+                    if (!grid.ContainsKey(gridPos))
+                    {
+                        SuperTile tile = SpawnTile(gridPos);
+                        grid[gridPos] = tile;
+                        spawnedTiles.Add(tile);
+
+                        if (Approximately(pixel, Color.red) && enemyPrefab != null)
+                            SpawnSpecial(enemyPrefab, gridPos);
+                        else if (Approximately(pixel, Color.green) && healingPrefab != null)
+                            SpawnSpecial(healingPrefab, gridPos);
+                        else if (Approximately(pixel, Color.yellow) && goldPrefab != null)
+                            SpawnSpecial(goldPrefab, gridPos);
+                        else if (Approximately(pixel, new Color(0.5f, 0f, 0.5f)) && hazardPrefab != null)
+                            SpawnSpecial(hazardPrefab, gridPos);
+                        else if (Approximately(pixel, Color.blue) && shopPrefab != null)
+                            SpawnSpecial(shopPrefab, gridPos);
+                    }
+                }
             }
         }
+    }
+
+    SuperTile SpawnTile(Vector3Int gridPos)
+    {
+        Vector3 worldPos = new Vector3(gridPos.x, gridPos.y, gridPos.z) + spawnOffset;
+        SuperTile tile = Instantiate(superTilePrefab, worldPos, Quaternion.identity, transform);
+        tile.transform.localScale = scale;
+        tile.GridPosition = gridPos;
+
+        // 🎨 Optional: Give walls a random color
+        Color[] possibleColors = { Color.gray, Color.white, new Color(0.5f, 0.5f, 0.6f) };
+        Renderer rend = tile.GetComponent<Renderer>();
+        if (rend != null)
+        {
+            rend.material.color = possibleColors[Random.Range(0, possibleColors.Length)];
+        }
+
+        return tile;
+    }
+
+    void SpawnSpecial(GameObject prefab, Vector3Int gridPos)
+    {
+        Vector3 worldPos = new Vector3(gridPos.x, gridPos.y, gridPos.z) + spawnOffset + Vector3.up * specialSpawnYOffset;
+        Instantiate(prefab, worldPos, Quaternion.identity, transform);
+    }
+
+    bool Approximately(Color a, Color b, float tolerance = 0.1f)
+    {
+        return Mathf.Abs(a.r - b.r) < tolerance &&
+               Mathf.Abs(a.g - b.g) < tolerance &&
+               Mathf.Abs(a.b - b.b) < tolerance;
+    }
+
+    List<Vector3Int> GetAllPossibleDirections()
+    {
+        return new List<Vector3Int>
+        {
+            Vector3Int.right,
+            Vector3Int.left,
+            Vector3Int.forward,
+            Vector3Int.back,
+            Vector3Int.up,
+            Vector3Int.down
+        };
     }
 
     public void ClearDungeon()
     {
         foreach (Transform child in transform)
+        {
             DestroyImmediate(child.gameObject);
-        placedTiles.Clear();
-        tileReferences.Clear();
-        occupiedPlaceholders.Clear();
-    }
-
-    // Handle rotation based on neighbors
-    float GetTileRotation(Vector3Int pos, DungeonGroundTileData tileData)
-    {
-        // Check neighboring tiles to determine appropriate rotation
-        // This is a simple example - expand based on your specific rotation needs
-        bool hasLeft = placedTiles.ContainsKey(pos + Vector3Int.left);
-        bool hasRight = placedTiles.ContainsKey(pos + Vector3Int.right);
-        bool hasForward = placedTiles.ContainsKey(pos + new Vector3Int(0, 0, 1));
-        bool hasBackward = placedTiles.ContainsKey(pos + new Vector3Int(0, 0, -1));
-        
-        // Simple rotation logic (expand this based on your needs)
-        if (hasLeft && !hasRight && !hasForward && !hasBackward) return 90;
-        if (!hasLeft && hasRight && !hasForward && !hasBackward) return 270;
-        if (!hasLeft && !hasRight && hasForward && !hasBackward) return 180;
-        if (!hasLeft && !hasRight && !hasForward && hasBackward) return 0;
-        
-        // Corner cases
-        if (hasLeft && hasForward && !hasRight && !hasBackward) return 135;
-        if (hasRight && hasForward && !hasLeft && !hasBackward) return 225;
-        if (hasRight && hasBackward && !hasLeft && !hasForward) return 315;
-        if (hasLeft && hasBackward && !hasRight && !hasForward) return 45;
-        
-        // If we have a custom rotation based on neighbor tile types, apply it
-        return ApplyCustomRotation(pos, tileData);
-    }
-    
-    float ApplyCustomRotation(Vector3Int pos, DungeonGroundTileData tileData)
-    {
-        // Check each neighbor and apply custom rotation rules
-        Vector3Int[] neighborPositions = {
-            pos + Vector3Int.left,        // Left
-            pos + Vector3Int.right,       // Right
-            pos + new Vector3Int(0, 0, 1), // Forward
-            pos + new Vector3Int(0, 0, -1) // Backward
-        };
-        
-        string[] directions = { "Left", "Right", "Forward", "Backward" };
-        
-        for (int i = 0; i < neighborPositions.Length; i++)
-        {
-            Vector3Int neighborPos = neighborPositions[i];
-            if (tileReferences.TryGetValue(neighborPos, out TileReference neighborRef))
-            {
-                // Check if there's a custom rotation rule for this neighbor
-                if (neighborRef.groundTileData != null)
-                {
-                    string neighborTileName = neighborRef.groundTileData.tileName;
-                    
-                    // This is where you'd implement the custom rotation logic
-                    // based on specific tile combinations
-                    
-                    // Example for a simple case - can be expanded:
-                    if (tileData.tileName == "CornerTile" && neighborTileName == "CorridorTile")
-                    {
-                        // Rotate the corner to match the corridor
-                        if (directions[i] == "Left") return 90;
-                        if (directions[i] == "Right") return 270;
-                        if (directions[i] == "Forward") return 180;
-                        if (directions[i] == "Backward") return 0;
-                    }
-                }
-            }
-        }
-        
-        // Default rotation if no custom rule matches
-        return 0;
-    }
-
-    DungeonGroundTileData PickValidGroundTile(Vector3Int pos)
-    {
-        List<DungeonGroundTileData> validTiles = new List<DungeonGroundTileData>(groundTiles);
-        
-        // Check neighbors in all four directions
-        CheckNeighborTiles(pos, ref validTiles);
-        
-        // If no valid tiles found, return null
-        if (validTiles.Count == 0)
-            return null;
-        
-        // Return a random valid tile
-        return validTiles[Random.Range(0, validTiles.Count)];
-    }
-    
-    void CheckNeighborTiles(Vector3Int pos, ref List<DungeonGroundTileData> validTiles)
-    {
-        // Check tile to the left
-        CheckNeighbor(pos + Vector3Int.left, "Left", ref validTiles);
-        
-        // Check tile to the right
-        CheckNeighbor(pos + Vector3Int.right, "Right", ref validTiles);
-        
-        // Check tile forward (z+1)
-        CheckNeighbor(pos + new Vector3Int(0, 0, 1), "Forward", ref validTiles);
-        
-        // Check tile backward (z-1)
-        CheckNeighbor(pos + new Vector3Int(0, 0, -1), "Backward", ref validTiles);
-        
-        // Check tile above (y+1)
-        CheckNeighbor(pos + Vector3Int.up, "Above", ref validTiles);
-        
-        // Check tile below (y-1)
-        CheckNeighbor(pos + Vector3Int.down, "Below", ref validTiles);
-    }
-    
-    void CheckNeighbor(Vector3Int neighborPos, string direction, ref List<DungeonGroundTileData> validTiles)
-    {
-        if (tileReferences.TryGetValue(neighborPos, out TileReference neighborRef))
-        {
-            if (neighborRef.groundTileData != null)
-            {
-                string neighborTileName = neighborRef.groundTileData.tileName;
-                
-                // Filter tiles based on directional validation
-                switch (direction)
-                {
-                    case "Left":
-                        validTiles = validTiles.FindAll(t => t.validLeft.Contains(neighborTileName));
-                        break;
-                    case "Right":
-                        validTiles = validTiles.FindAll(t => t.validRight.Contains(neighborTileName));
-                        break;
-                    case "Forward":
-                        validTiles = validTiles.FindAll(t => t.validForward.Contains(neighborTileName));
-                        break;
-                    case "Backward":
-                        validTiles = validTiles.FindAll(t => t.validBackward.Contains(neighborTileName));
-                        break;
-                    case "Above":
-                        validTiles = validTiles.FindAll(t => t.validAbove.Contains(neighborTileName));
-                        break;
-                    case "Below":
-                        validTiles = validTiles.FindAll(t => t.validBelow.Contains(neighborTileName));
-                        break;
-                }
-            }
         }
     }
 
-    DungeonWallTileData PickValidWallTile(Vector3Int pos)
+    void Shuffle<T>(List<T> list)
     {
-        List<DungeonWallTileData> candidates = new List<DungeonWallTileData>();
-        
-        foreach (var wallTile in wallTiles)
+        for (int i = list.Count - 1; i > 0; i--)
         {
-            // Check if this wall tile can connect to adjacent tiles
-            bool isValid = true;
-            
-            // Check if wall can connect to the left
-            Vector3Int leftPos = pos + Vector3Int.left;
-            if (tileReferences.TryGetValue(leftPos, out TileReference leftRef))
-            {
-                // If left tile is a ground tile, make sure our wall connects to it
-                if (leftRef.groundTileData != null && 
-                    !wallTile.validLeftWalls.Contains(leftRef.groundTileData.tileName))
-                {
-                    isValid = false;
-                }
-            }
-            
-            // Similar checks for right, forward, backward
-            // Add these as needed based on your wall placement rules
-            
-            if (isValid)
-                candidates.Add(wallTile);
+            int j = Random.Range(0, i + 1);
+            (list[i], list[j]) = (list[j], list[i]);
         }
-        
-        return candidates.Count > 0 ? candidates[Random.Range(0, candidates.Count)] : null;
-    }
-
-    void PlaceWalls(Vector3Int pos, DungeonWallTileData wallTile)
-    {
-        // Check the four cardinal directions for wall placement
-        PlaceWallInDirection(pos, Vector3Int.left, wallTile, "Left");
-        PlaceWallInDirection(pos, Vector3Int.right, wallTile, "Right");
-        PlaceWallInDirection(pos, new Vector3Int(0, 0, 1), wallTile, "Forward");
-        PlaceWallInDirection(pos, new Vector3Int(0, 0, -1), wallTile, "Backward");
-    }
-    
-    void PlaceWallInDirection(Vector3Int tilePos, Vector3Int direction, DungeonWallTileData wallTile, string directionName)
-    {
-        Vector3Int wallPos = tilePos + direction;
-        
-        // Check if position is valid for a wall (outside grid or no tile exists there)
-        if (IsValidWallPosition(wallPos))
-        {
-            GameObject wallPrefab = null;
-            Quaternion rotation = Quaternion.identity;
-            
-            // Determine which wall prefab to use based on direction
-            switch (directionName)
-            {
-                case "Left":
-                    wallPrefab = wallTile.leftWallPrefab;
-                    rotation = Quaternion.Euler(0, 270, 0);
-                    break;
-                case "Right": 
-                    wallPrefab = wallTile.rightWallPrefab;
-                    rotation = Quaternion.Euler(0, 90, 0);
-                    break;
-                case "Forward":
-                    wallPrefab = wallTile.leftWallPrefab; // Reuse left wall for forward
-                    rotation = Quaternion.Euler(0, 0, 0);
-                    break;
-                case "Backward":
-                    wallPrefab = wallTile.rightWallPrefab; // Reuse right wall for backward
-                    rotation = Quaternion.Euler(0, 180, 0);
-                    break;
-            }
-            
-            if (wallPrefab != null)
-            {
-                Vector3 worldPos = new(
-                    wallPos.x * tileSize, 
-                    tilePos.y * tileSize, 
-                    wallPos.z * tileSize);
-                
-                GameObject wall = Instantiate(wallPrefab, worldPos, rotation, transform);
-                wall.name = $"Wall_{directionName}_{wallPos.x}_{tilePos.y}_{wallPos.z}";
-                
-                // Add reference component
-                var wallRef = wall.AddComponent<TileReference>();
-                wallRef.wallTileData = wallTile;
-                
-                placedTiles[wallPos] = wall;
-                tileReferences[wallPos] = wallRef;
-            }
-        }
-    }
-
-    bool IsValidWallPosition(Vector3Int pos)
-    {
-        // A wall position is valid if:
-        // 1. It's outside the grid bounds, OR
-        // 2. It's inside the grid bounds but there's no tile there yet
-        return (pos.x < 0 || pos.x >= width || pos.z < 0 || pos.z >= depth) || 
-               (!placedTiles.ContainsKey(pos));
-    }
-
-    void PlaceObjectsOnTile(GameObject tile, DungeonGroundTileData tileData, Vector3Int tilePos)
-    {
-        // Place objects based on placeholders in the tile data
-        foreach (var placeholder in tileData.placeholders)
-        {
-            // Find suitable objects for this placeholder
-            List<DungeonObjectTileData> validObjects = dungeonObjects.FindAll(obj => 
-                obj.validBelow == tileData.tileName || obj.validBelow == "Ground");
-            
-            if (validObjects.Count == 0)
-                continue;
-            
-            // Try to place an object at this placeholder
-            Vector3 worldPlaceholderPos = tile.transform.TransformPoint(placeholder.localPosition);
-            Vector3Int gridPos = tilePos + Vector3Int.RoundToInt(placeholder.localPosition / tileSize);
-            
-            if (IsAreaFree(gridPos, placeholder.size))
-            {
-                // Choose a random valid object
-                DungeonObjectTileData objectData = validObjects[Random.Range(0, validObjects.Count)];
-                GameObject objInstance = Instantiate(
-                    objectData.prefab, 
-                    worldPlaceholderPos, 
-                    Quaternion.Euler(objectData.localRotation), 
-                    tile.transform);
-                
-                objInstance.name = $"Object_{objectData.objectName}";
-                
-                // Add reference component
-                var objRef = objInstance.AddComponent<TileReference>();
-                objRef.objectTileData = objectData;
-                
-                // Mark area as occupied
-                MarkOccupied(gridPos, placeholder.size);
-            }
-        }
-    }
-
-    bool IsBorderTile(Vector3Int pos)
-    {
-        return pos.x == 0 || pos.x == width - 1 || pos.z == 0 || pos.z == depth - 1;
-    }
-
-    bool IsAreaFree(Vector3Int origin, Vector2Int size)
-    {
-        for (int x = 0; x < size.x; x++)
-            for (int z = 0; z < size.y; z++)
-                if (occupiedPlaceholders.Contains(origin + new Vector3Int(x, 0, z)))
-                    return false;
-        return true;
-    }
-
-    void MarkOccupied(Vector3Int origin, Vector2Int size)
-    {
-        for (int x = 0; x < size.x; x++)
-            for (int z = 0; z < size.y; z++)
-                occupiedPlaceholders.Add(origin + new Vector3Int(x, 0, z));
     }
 }
-
-// Add this new class to store references to tile data
-public class TileReference : MonoBehaviour
+[System.Serializable]
+public class FloorData
 {
-    public DungeonGroundTileData groundTileData;
-    public DungeonWallTileData wallTileData;
-    public DungeonObjectTileData objectTileData;
+    public Texture2D layoutTexture;
+    public int repeatCount = 1;
 }
