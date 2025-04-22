@@ -50,7 +50,7 @@ public class SmartCameraController : MonoBehaviour
         pitch = angles.x;
     }
 
-    void Update()
+    void FixedUpdate()
     {
         HandleZoom();
         HandleRotation();

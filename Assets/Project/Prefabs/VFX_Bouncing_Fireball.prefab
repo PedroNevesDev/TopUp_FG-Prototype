@@ -9991,6 +9991,10 @@ MonoBehaviour:
   bounceAngle: 90
   collisionEffect: {fileID: 4067605730088931189, guid: 41881d43513c8ec4fb771b2e7c766f9e, type: 3}
   rb: {fileID: 900703144525231684}
+  trails:
+  - {fileID: 3267378039362748202}
+  - {fileID: 8957939059767132460}
+  - {fileID: 3320308313608958430}
 --- !u!54 &900703144525231684
 Rigidbody:
   m_ObjectHideFlags: 0

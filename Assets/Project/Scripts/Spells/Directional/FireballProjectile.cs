@@ -13,6 +13,8 @@ public class FireballProjectile : MonoBehaviour
 
     public Rigidbody rb;
     private int currentBounceCount;
+
+    public List<TrailRenderer> trails = new List<TrailRenderer>();
     
     public void OnEnable()
     {
@@ -24,6 +26,8 @@ public class FireballProjectile : MonoBehaviour
 
         // Throw the object after ensuring it's fully active
         ThrowObject();
+
+        trails.ForEach(t=> t.emitting = true);
     }
 
 
@@ -63,6 +67,11 @@ private void ReturnToPool()
     rb.linearVelocity = Vector3.zero;  // Reset movement
     rb.angularVelocity = Vector3.zero;  // Reset rotation force
     rb.Sleep(); // Ensure it's fully stopped
+    trails.ForEach(t =>{
+        t.emitting = false;
+        t.Clear();
+
+    } );
 
     // Return to pool
     ObjectPool.Instance.ReturnObject(gameObject);
@@ -76,7 +85,6 @@ void FixedUpdate()
     // Debug if the fireball is stuck (not moving but still active)
     if (rb.linearVelocity.magnitude < 0.1f && currentBounceCount > 0)
     {
-        Debug.LogWarning($"Fireball stuck: {gameObject.name} at {transform.position}");
         ThrowObject(); // Try re-throwing it
     }
 }
