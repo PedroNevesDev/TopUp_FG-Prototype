@@ -51,10 +51,7 @@ public class PlayerController : Singleton<PlayerController>
             if (!bindedSpells.ContainsKey(key))
                 bindedSpells[key] = cards[i];
         }
-        foreach (var kvp in bindedSpells)
-{
-    Debug.Log($"Bound {kvp.Value.name} to {kvp.Key}");
-}
+
     }
 
     void Update()

@@ -126,7 +126,11 @@ public class DungeonGenerator : MonoBehaviour
                 else if (Approximately(pixel, new Color(0.5f, 0f, 0.5f))) SpawnSpecial(hazardPrefab, pos);
                 else if (Approximately(pixel, Color.blue)) SpawnSpecial(shopPrefab, pos);
                 else if (Approximately(pixel, Color.cyan) && player != null)
+                {
                     player.position = tile.transform.position + new Vector3(0, 0.5f, 0);
+                    print("Found blue pixel");                    
+                }
+
             }
 
             // Handle decorations
