@@ -36,6 +36,31 @@ public class ObjectPool : Singleton<ObjectPool>
         return objectToSpawn;
     }
 
+    public GameObject GetObject(GameObject prefab)
+    {
+        GameObject objectToSpawn;
+
+        if (poolDictionary.ContainsKey(prefab) && poolDictionary[prefab].Count > 0)
+        {
+            // Get an object from the pool
+            objectToSpawn = poolDictionary[prefab].Dequeue();
+        }
+        else
+        {
+            // If the pool is empty, instantiate a new object
+            Debug.Log("Pool is empty, spawning new object.");
+            objectToSpawn = Instantiate(prefab);
+        }
+
+        objectToSpawn.SetActive(true);
+        ResetObjectComponents(objectToSpawn);
+
+        // Track the prefab for this object
+        objectToPrefabMap[objectToSpawn] = prefab;
+
+        return objectToSpawn;
+    }
+
     // Method to properly prepare an object for spawning
     private void PrepareObjectForSpawn(GameObject obj, Vector3 position, Quaternion rotation)
     {

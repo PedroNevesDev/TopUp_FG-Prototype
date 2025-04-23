@@ -4,16 +4,28 @@ using UnityEngine;
 
 public class FireballSpell : ActiveSpell
 {
-    public override void Cast(Vector3 spawnPoint, Vector3 direction )
+public override void Cast(Vector3 spawnPoint, Vector3 direction)
+{
+    base.Cast(spawnPoint, direction);
+
+    if (myCard.onCooldown) return;
+
+    Debug.Log("Casting " + spell.spellName);
+
+    int count = spell.projectileCount + globalStats.additionalProjectiles;
+    float angle = spell.projectileMaxAngle;
+
+    for (int i = 0; i < count; i++)
     {
-        base.Cast( spawnPoint, direction );
+        float spreadStep = (count > 1) ? angle / (count - 1) : 0f;
+        float currentAngle = -angle / 2f + spreadStep * i;
 
-        if(myCard.onCooldown) return;
-        
-        Debug.Log("Casting " + spell.spellName);
+        Quaternion rotationOffset = Quaternion.AngleAxis(currentAngle, Vector3.up); // rotate around Y axis
+        Vector3 rotatedDirection = rotationOffset * direction;
 
-        ObjectPool.Instance.GetObject(spell.spellPrefab, spawnPoint, Quaternion.LookRotation(direction));
-
-        StartCooldown();
+        ObjectPool.Instance.GetObject(spell.spellPrefab, spawnPoint, Quaternion.LookRotation(rotatedDirection));
     }
+
+    StartCooldown();
+}
 }

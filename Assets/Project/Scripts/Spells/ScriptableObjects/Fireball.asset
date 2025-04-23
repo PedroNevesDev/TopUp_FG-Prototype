@@ -15,5 +15,9 @@ MonoBehaviour:
   spellName: Fireball
   spellDescription: Throws a fireball that bounces 3 times.
   spellIcon: {fileID: 21300000, guid: 790543d0434624eabb5dbc29bf63e20b, type: 3}
-  cooldownDuration: 1
+  cooldownDuration: 0.2
+  projectileCount: 1
+  projectileMaxAngle: 0
+  spellDuration: 0
+  canBeCanceled: 0
   spellPrefab: {fileID: 4457390620143002123, guid: 356db54ccefaa489e979e9626417d9a1, type: 3}

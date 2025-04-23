@@ -15,6 +15,23 @@ public class ActiveSpell : Spell
         Debug.Log(spell.spellName + " cast!");
     }
 
+    public override void AfflictUser()
+    {
+        if(myCard.onDuration)
+        {
+            Debug.Log(spell.spellName + " is already Active!");
+            return;            
+        }
+        if (myCard.onCooldown)
+        {
+            Debug.Log(spell.spellName + " is on cooldown!");
+            return;
+        }
+
+        // Cast the spell (spawn the fireball, etc.)
+        Debug.Log(spell.spellName + " cast!");
+    }
+
     protected void StartCooldown()
     {
         myCard.StartCooldown();

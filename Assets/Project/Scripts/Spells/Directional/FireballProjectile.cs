@@ -15,14 +15,23 @@ public class FireballProjectile : MonoBehaviour
     private int currentBounceCount;
 
     public List<TrailRenderer> trails = new List<TrailRenderer>();
-    
+
+    GlobalStatsManager globalStats;
+
+    void Start()
+    {
+        globalStats = GlobalStatsManager.Instance;   
+    }
     public void OnEnable()
     {
         rb.linearVelocity = Vector3.zero; // Ensure no old forces remain
         rb.angularVelocity = Vector3.zero;
         rb.WakeUp(); // Reactivate physics engine processing
-
-        currentBounceCount = maxBounceCount;
+        if(globalStats==null)
+        {
+            globalStats = GlobalStatsManager.Instance;
+        }
+        currentBounceCount = maxBounceCount+globalStats.additionalBounces;
 
         // Throw the object after ensuring it's fully active
         ThrowObject();
@@ -38,56 +47,56 @@ public class FireballProjectile : MonoBehaviour
         rb.AddForce(transform.forward * throwForce, ForceMode.Impulse);
     }
 
-private void OnCollisionEnter(Collision collision)
-{
-    Vector3 contactNormal = collision.contacts[0].normal;
-
-    // Reflect velocity normally
-    Vector3 reflectedVelocity = Vector3.Reflect(rb.linearVelocity, contactNormal);
-    reflectedVelocity = ApplyBounceAngle(reflectedVelocity, contactNormal);
-
-    // Ensure it never falls below a minimum threshold
-    float minVelocity = 3f; // Adjust as needed
-    if (reflectedVelocity.magnitude < minVelocity)
+    private void OnCollisionEnter(Collision collision)
     {
-        reflectedVelocity = reflectedVelocity.normalized * minVelocity;
+        Vector3 contactNormal = collision.contacts[0].normal;
+
+        // Reflect velocity normally
+        Vector3 reflectedVelocity = Vector3.Reflect(rb.linearVelocity, contactNormal);
+        reflectedVelocity = ApplyBounceAngle(reflectedVelocity, contactNormal);
+
+        // Ensure it never falls below a minimum threshold
+        float minVelocity = 3f; // Adjust as needed
+        if (reflectedVelocity.magnitude < minVelocity)
+        {
+            reflectedVelocity = reflectedVelocity.normalized * minVelocity;
+        }
+
+        rb.linearVelocity = reflectedVelocity * bounceLossMultiplier;
+        currentBounceCount--;
+        // Decrease bounce count or return to pool
+        if (currentBounceCount < 0)
+        {
+            ReturnToPool();
+        }
     }
 
-    rb.linearVelocity = reflectedVelocity * bounceLossMultiplier;
-    currentBounceCount--;
-    // Decrease bounce count or return to pool
-    if (currentBounceCount < 0)
+    private void ReturnToPool()
     {
-        ReturnToPool();
+        rb.linearVelocity = Vector3.zero;  // Reset movement
+        rb.angularVelocity = Vector3.zero;  // Reset rotation force
+        rb.Sleep(); // Ensure it's fully stopped
+        trails.ForEach(t =>{
+            t.emitting = false;
+            t.Clear();
+
+        } );
+
+        // Return to pool
+        ObjectPool.Instance.ReturnObject(gameObject);
     }
-}
 
-private void ReturnToPool()
-{
-    rb.linearVelocity = Vector3.zero;  // Reset movement
-    rb.angularVelocity = Vector3.zero;  // Reset rotation force
-    rb.Sleep(); // Ensure it's fully stopped
-    trails.ForEach(t =>{
-        t.emitting = false;
-        t.Clear();
-
-    } );
-
-    // Return to pool
-    ObjectPool.Instance.ReturnObject(gameObject);
-}
-
-void FixedUpdate()
-{
-    // Apply additional gravity
-    rb.AddForce(Vector3.down * additionalGravity, ForceMode.Acceleration);
-
-    // Debug if the fireball is stuck (not moving but still active)
-    if (rb.linearVelocity.magnitude < 0.1f && currentBounceCount > 0)
+    void FixedUpdate()
     {
-        ThrowObject(); // Try re-throwing it
+        // Apply additional gravity
+        rb.AddForce(Vector3.down * additionalGravity, ForceMode.Acceleration);
+
+        // Debug if the fireball is stuck (not moving but still active)
+        if (rb.linearVelocity.magnitude < 0.1f && currentBounceCount > 0)
+        {
+            ThrowObject(); // Try re-throwing it
+        }
     }
-}
 
     // Apply the bounce angle to the reflected velocity
     private Vector3 ApplyBounceAngle(Vector3 reflectedVelocity, Vector3 contactNormal)

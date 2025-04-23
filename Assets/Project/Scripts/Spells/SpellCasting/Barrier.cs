@@ -1,16 +1,17 @@
 using UnityEngine;
 
-public class Barrier : MonoBehaviour
+public class BarrierSpell : ActiveSpell
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    public override void AfflictUser()
     {
+        base.AfflictUser();
+        if(myCard.onDuration) return;
+        if(myCard.onCooldown) return;
         
-    }
+        Debug.Log("Casting " + spell.spellName);
 
-    // Update is called once per frame
-    void Update()
-    {
-        
+        ObjectPool.Instance.GetObject(spell.spellPrefab);
+
+        StartCooldown();
     }
 }

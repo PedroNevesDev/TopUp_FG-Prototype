@@ -13,10 +13,14 @@ public class Card : MonoBehaviour
 
     public TextMeshProUGUI cdText;
 
-    float currentTime;
+    float currentCD;
 
     private SpellSO spellSO;
     public bool onCooldown = false;
+
+    public bool onDuration = false;
+
+    float currentDuration;
     public void Setup(SpellSO spellData)
     {
         SetText(spellData.cooldownDuration);
@@ -29,10 +33,10 @@ public class Card : MonoBehaviour
     {
         if(onCooldown)
         {
-            currentTime-= Time.fixedDeltaTime;
-            cdImage.fillAmount = currentTime/spellSO.cooldownDuration;
-            SetText(currentTime);
-            if(currentTime<=0f)
+            currentCD-= Time.fixedDeltaTime;
+            cdImage.fillAmount = currentCD/spellSO.cooldownDuration;
+            SetText(currentCD);
+            if(currentCD<=0f)
             {
                 onCooldown = false;
                 SetText(spellSO.cooldownDuration);
@@ -41,6 +45,19 @@ public class Card : MonoBehaviour
             }            
         }
 
+        if(onDuration)
+        {
+            currentDuration -= Time.fixedDeltaTime;
+            cdImage.fillAmount -= currentDuration/spellSO.spellDuration;
+            SetText(currentDuration);
+            if(currentDuration<=0f)
+            {
+                onDuration = false;
+                SetText(spellSO.spellDuration);
+                cdImage.fillAmount = 1f;
+                StartCooldown();
+            }
+        }
     }
     void SetText(float num)
     {
@@ -49,9 +66,14 @@ public class Card : MonoBehaviour
 
     public void StartCooldown()
     {
-        currentTime = spellSO.cooldownDuration;
+        currentCD = spellSO.cooldownDuration;
         onCooldown = true;
         darkning.enabled = true;
-        cdImage.enabled = true;
+    }
+
+    public void StartDuration()
+    {
+        currentDuration = spellSO.spellDuration;
+        onDuration = true;
     }
 }
