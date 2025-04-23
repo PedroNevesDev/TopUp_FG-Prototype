@@ -40,19 +40,6 @@ public class PlayerController : Singleton<PlayerController>
         rb.linearVelocity = newVel;
     }
 
-    void Start()
-    {
-        List<Spell> cards = cardHolder.GetComponentsInChildren<Spell>().ToList();
-
-        // Auto-bind Alpha0 - Alpha9 for the first 10 spells
-        for (int i = 0; i < cards.Count && i < 10; i++)
-        {
-            Key key = (Key)System.Enum.Parse(typeof(Key), "Digit" + (i+1)); // InputSystem Key, not KeyCode
-            if (!bindedSpells.ContainsKey(key))
-                bindedSpells[key] = cards[i];
-        }
-
-    }
 
     void Update()
     {
@@ -74,9 +61,20 @@ public class PlayerController : Singleton<PlayerController>
                     }
                 }
 
-                break;
+
             }
         }
+        // Bind new spells if they appear (up to 10 keys)
+        var spells = cardHolder.GetComponentsInChildren<Spell>();
+        for (int i = 0; i < spells.Length && i < 10; i++)
+        {
+            Key key = (Key)System.Enum.Parse(typeof(Key), "Digit" + (i + 1));
+            if (!bindedSpells.ContainsKey(key))
+            {
+                bindedSpells[key] = spells[i];
+            }
+        }
+
     }
 }
 

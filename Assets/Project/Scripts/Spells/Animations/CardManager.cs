@@ -1,7 +1,8 @@
 using UnityEngine;
 using DG.Tweening;
 using System.Collections;
-
+using UnityEngine.Rendering.Universal;
+using System.Linq;
 public class CardManager : MonoBehaviour
 {
     [Header("Card References")]
@@ -49,6 +50,16 @@ public class CardManager : MonoBehaviour
             ToggleCardView();
         if(Input.GetKeyDown(KeyCode.Escape))
             ToggleCardSelection();
+
+        if(cards.Length!=transform.childCount)
+        {
+        cards = transform.Cast<Transform>()
+                        .Select(t => t.GetComponent<RectTransform>())
+                        .Where(rt => rt != null)
+                        .ToArray();
+
+            MoveToHandState();
+        }        
     }
 
     public void ToggleCardSelection()
