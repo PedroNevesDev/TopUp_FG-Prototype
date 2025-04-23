@@ -4,6 +4,8 @@ using UnityEngine;
 public class SpellSO : ScriptableObject
 {
     public string spellName;
+    public string spellDescription;
+    public Sprite spellIcon;
     public float cooldownDuration = 5f;  // Example cooldown time in seconds
     public GameObject spellPrefab; // Prefab of the projectile
 }

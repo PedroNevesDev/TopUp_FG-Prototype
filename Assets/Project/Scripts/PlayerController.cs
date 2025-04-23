@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -13,6 +15,9 @@ public class PlayerController : MonoBehaviour
     private Dictionary<Key, Spell> bindedSpells = new Dictionary<Key, Spell>();
 
     public void OnMove(InputAction.CallbackContext context) => move = context.action.ReadValue<Vector2>();
+
+
+    public Transform cardHolder;
 
     void Movement()
     {
@@ -37,7 +42,19 @@ public class PlayerController : MonoBehaviour
 
     void Start()
     {
-        binds.ForEach(b => bindedSpells.Add(b.keyCode, b.spellPrefab));
+        List<Spell> cards = cardHolder.GetComponentsInChildren<Spell>().ToList();
+
+        // Auto-bind Alpha0 - Alpha9 for the first 10 spells
+        for (int i = 0; i < cards.Count && i < 10; i++)
+        {
+            Key key = (Key)System.Enum.Parse(typeof(Key), "Digit" + (i+1)); // InputSystem Key, not KeyCode
+            if (!bindedSpells.ContainsKey(key))
+                bindedSpells[key] = cards[i];
+        }
+        foreach (var kvp in bindedSpells)
+{
+    Debug.Log($"Bound {kvp.Value.name} to {kvp.Key}");
+}
     }
 
     void Update()

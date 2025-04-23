@@ -2,7 +2,7 @@ using UnityEngine;
 using DG.Tweening;
 using System.Collections;
 
-public class CardFanAnimator : MonoBehaviour
+public class CardManager : MonoBehaviour
 {
     [Header("Card References")]
     public RectTransform[] cards;
@@ -10,6 +10,8 @@ public class CardFanAnimator : MonoBehaviour
     [Header("Position References")]
     public RectTransform handFanCenter;      // Cards fan out here in hand
     public RectTransform deckStackPosition;  // Cards collapse here in deck state
+
+    public GameObject pressSpace;
 
     [Header("Fan Layout Settings (Hand State)")]
     public float fanRadius = 250f;
@@ -75,6 +77,7 @@ public class CardFanAnimator : MonoBehaviour
 
     public void MoveToHandState()
     {
+        pressSpace.SetActive(false);
         int count = cards.Length;
         if (count == 0) return;
 
@@ -108,6 +111,7 @@ public class CardFanAnimator : MonoBehaviour
 
     public void MoveToSelectionState()
     {
+        pressSpace.SetActive(false);
         int count = cards.Length;
         if (count == 0 || selectionCenter == null) return;
 
@@ -132,6 +136,7 @@ public class CardFanAnimator : MonoBehaviour
 
     public void MoveToDeckState()
     {
+        pressSpace.SetActive(true);
         foreach (RectTransform card in cards)
         {
             card.DOAnchorPos(deckStackPosition.anchoredPosition, animationDuration)

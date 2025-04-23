@@ -8,7 +8,7 @@ public class FireballSpell : ActiveSpell
     {
         base.Cast( spawnPoint, direction );
 
-        if(isOnCooldown) return;
+        if(myCard.onCooldown) return;
         
         Debug.Log("Casting " + spell.spellName);
 
