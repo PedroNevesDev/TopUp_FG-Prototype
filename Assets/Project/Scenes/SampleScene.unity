@@ -9661,8 +9661,8 @@ MonoBehaviour:
   generateOnStart: 1
   superTilePrefab: {fileID: 3552886099303101551, guid: 9da7098c24a59499b99ba15f1aa091e2, type: 3}
   floors:
-  - layoutTexture: {fileID: 2800000, guid: 4c3e0751e70794e9ba8af8706ffde765, type: 3}
-    decorTexture: {fileID: 2800000, guid: 743117f734eab434a8f9d8b6f2860fe0, type: 3}
+  - layoutTexture: {fileID: 2800000, guid: a8e51df7ee70f4f488df9f77837b4c39, type: 3}
+    decorTexture: {fileID: 0}
     repeatCount: 1
   enemyPrefab: {fileID: 5569290702624666081, guid: ccb3c28785de940ebbeaa4f115119a2d, type: 3}
   healingPrefab: {fileID: 3752085732903609143, guid: aae347350717749af8a6dabf967e2a82, type: 3}
