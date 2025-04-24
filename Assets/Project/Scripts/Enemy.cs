@@ -32,6 +32,8 @@ public class Enemy : MonoBehaviour
             .SetEase(Ease.InOutSine)
             .OnComplete(() => {
                 Debug.Log("Arrived!");
+                obj.transform.position = target.position;
+                obj.transform.rotation = target.rotation;
                 // Optional: trigger VFX or destroy
             });
     }
