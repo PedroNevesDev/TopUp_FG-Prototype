@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public class SuperTile : MonoBehaviour
 {
@@ -25,6 +27,51 @@ public class SuperTile : MonoBehaviour
     private bool forwardWallDisabled = false;
     private bool backWallDisabled = false;
     private bool floorDisabled = false;
+
+    Dictionary<GameObject, GameObject> occupied = new Dictionary<GameObject, GameObject>();
+
+List<GameObject> GetAvailableObjects(Transform t)
+{
+    if(t.gameObject.activeSelf == false) return new List<GameObject>();
+    List<GameObject> listOfGameObjects = new List<GameObject>();
+        for(int i = 0; i < t.childCount;i++)
+        {
+            if(!occupied.ContainsKey(t.GetChild(i).gameObject))
+            {
+                listOfGameObjects.Add(t.GetChild(i).gameObject);
+            }
+        }
+    return listOfGameObjects;
+}
+
+public void PlaceDecor(GameObject prefab, DecorType decorType)
+{
+    List<GameObject> availableObjects = new List<GameObject>();
+
+    switch (decorType)
+    {
+        case DecorType.Floor:
+            availableObjects.AddRange(GetAvailableObjects(floor.transform));
+            break;
+
+        case DecorType.Wall:
+            availableObjects.AddRange(GetAvailableObjects(leftWall.transform));
+            availableObjects.AddRange(GetAvailableObjects(rightWall.transform));
+            availableObjects.AddRange(GetAvailableObjects(backWall.transform));
+            availableObjects.AddRange(GetAvailableObjects(forwardWall.transform));
+            break;
+
+        case DecorType.Ceiling:
+            // add when ceiling system exists
+            break;
+    }
+    if(availableObjects.Count<=0) return;
+    GameObject randomObj = availableObjects[Random.Range(0,availableObjects.Count)];
+
+    GameObject obj = Instantiate(prefab);
+    obj.transform.position = randomObj.transform.position;
+    occupied.Add(randomObj,obj);
+}
 
     public void Connect(SuperTile other, Vector3Int direction)
     {
@@ -107,29 +154,29 @@ public class SuperTile : MonoBehaviour
             new Vector3(bounds.max.x, bounds.max.y, bounds.max.z)  // Back-Right
         };
     }
-public Vector3 GetSurfacePosition()
-{
-    if (floor != null)
+    public Vector3 GetSurfacePosition()
     {
-        Collider col = floor.GetComponent<Collider>();
-        if (col != null)
+        if (floor != null)
         {
-            Bounds bounds = col.bounds; // world space bounds
-            Vector3 surfacePos = new Vector3(bounds.center.x, bounds.max.y, bounds.center.z);
-            return surfacePos;
+            Collider col = floor.GetComponent<Collider>();
+            if (col != null)
+            {
+                Bounds bounds = col.bounds; // world space bounds
+                Vector3 surfacePos = new Vector3(bounds.center.x, bounds.max.y, bounds.center.z);
+                return surfacePos;
+            }
+
+            // Optional: fallback if MeshRenderer exists but no collider
+            MeshRenderer mr = floor.GetComponent<MeshRenderer>();
+            if (mr != null)
+            {
+                Bounds bounds = mr.bounds;
+                Vector3 surfacePos = new Vector3(bounds.center.x, bounds.max.y, bounds.center.z);
+                return surfacePos;
+            }
         }
 
-        // Optional: fallback if MeshRenderer exists but no collider
-        MeshRenderer mr = floor.GetComponent<MeshRenderer>();
-        if (mr != null)
-        {
-            Bounds bounds = mr.bounds;
-            Vector3 surfacePos = new Vector3(bounds.center.x, bounds.max.y, bounds.center.z);
-            return surfacePos;
-        }
-    }
-
-    // Last fallback
-    return transform.position;
-}  
+        // Last fallback
+        return transform.position;
+    }  
 }

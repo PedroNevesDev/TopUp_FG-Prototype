@@ -1,8 +1,10 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "Spell", menuName = "Scriptable Objects/NewSpell")]
 public class SpellSO : ScriptableObject
 {
+    public List<SpellAttributes> attributes = new List<SpellAttributes>();
     public string spellName;
     public string spellDescription;
     public Sprite spellIcon;
@@ -19,5 +21,17 @@ public class SpellSO : ScriptableObject
     [Header("Object")]
     public GameObject spellPrefab; // Prefab of the projectile
 }
-
+public enum SpellAttributes
+{
+    Power,
+    Dexterity,
+    Utility,
+    Protective,
+    Fire,
+    Ice,
+    Projectile,
+    AOE,
+    Chain,
+    Duration,
+}
 

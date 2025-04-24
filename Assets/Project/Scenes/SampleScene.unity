@@ -10524,10 +10524,10 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 1601109410}
   - {fileID: 1243904065}
   - {fileID: 547697021}
   - {fileID: 1067078910}
-  - {fileID: 1601109410}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1585414452
@@ -10673,7 +10673,15 @@ MonoBehaviour:
   superTilePrefab: {fileID: 3552886099303101551, guid: 9da7098c24a59499b99ba15f1aa091e2, type: 3}
   floors:
   - layoutTexture: {fileID: 2800000, guid: 8a752fe5939054b26b2fd857eeac8d06, type: 3}
-    decorTexture: {fileID: 2800000, guid: d33f97b3a23554dfabaf2c9761c42670, type: 3}
+    decorLayers:
+    - decorTexture: {fileID: 2800000, guid: d33f97b3a23554dfabaf2c9761c42670, type: 3}
+      decorType: 0
+      listOfDecor:
+      - {fileID: 6272035329652119646, guid: f2958ca4686124c198a6c3c4f610acbf, type: 3}
+    - decorTexture: {fileID: 2800000, guid: d33f97b3a23554dfabaf2c9761c42670, type: 3}
+      decorType: 0
+      listOfDecor:
+      - {fileID: 7083754134095954261, guid: dbc60e3342a264f86b14d4feba3f07b3, type: 3}
     repeatCount: 1
   enemyPrefab: {fileID: 5569290702624666081, guid: ccb3c28785de940ebbeaa4f115119a2d, type: 3}
   healingPrefab: {fileID: 3752085732903609143, guid: aae347350717749af8a6dabf967e2a82, type: 3}
@@ -10682,9 +10690,6 @@ MonoBehaviour:
   shopPrefab: {fileID: 7085067461266306773, guid: 85d62990a9c8f46d3ae04b647e55e287, type: 3}
   specialSpawnYOffset: 0.5
   player: {fileID: 547697021}
-  decorationPrefabs:
-  - {fileID: 6272035329652119646, guid: f2958ca4686124c198a6c3c4f610acbf, type: 3}
-  - {fileID: 7083754134095954261, guid: dbc60e3342a264f86b14d4feba3f07b3, type: 3}
   decorYOffset: 0.5
   decorationDensity: 1
   theDarkningTilePrefab: {fileID: -8563338142784238332, guid: bfd0e1f381c124b9f8390b9ce8f75b8a, type: 3}
