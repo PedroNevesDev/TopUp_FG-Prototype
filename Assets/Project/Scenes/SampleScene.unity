@@ -1919,6 +1919,10 @@ MonoBehaviour:
   cameraTransform: {fileID: 330585546}
   binds: []
   cardHolder: {fileID: 1189919009}
+  enemyAwarenessRadius: 8
+  whatIsEnemy:
+    serializedVersion: 2
+    m_Bits: 0
 --- !u!54 &547697024
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -10675,9 +10679,9 @@ MonoBehaviour:
   - layoutTexture: {fileID: 2800000, guid: 8a752fe5939054b26b2fd857eeac8d06, type: 3}
     decorLayers:
     - decorTexture: {fileID: 2800000, guid: d33f97b3a23554dfabaf2c9761c42670, type: 3}
-      decorType: 0
+      decorType: 1
       listOfDecor:
-      - {fileID: 6272035329652119646, guid: f2958ca4686124c198a6c3c4f610acbf, type: 3}
+      - {fileID: 6863192435767951689, guid: 7ca85483fd98a451a952677fabcd0447, type: 3}
     - decorTexture: {fileID: 2800000, guid: d33f97b3a23554dfabaf2c9761c42670, type: 3}
       decorType: 0
       listOfDecor:

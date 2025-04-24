@@ -19,6 +19,25 @@ public class PlayerController : Singleton<PlayerController>
 
     public Transform cardHolder;
 
+    [Header("Awareness")]
+    public float enemyAwarenessRadius = 3f;
+    public LayerMask whatIsEnemy;
+
+void CheckForEnemies()
+{
+    RaycastHit[] hits = Physics.SphereCastAll(transform.position,enemyAwarenessRadius,Vector3.up,whatIsEnemy);
+    for(int i =0 ; i<hits.Length ; i++)
+    {
+        if(hits[i].collider.TryGetComponent(out Enemy enemy))
+        {
+            if(!enemy.isActivated)
+            {
+                enemy.ActivateEnemy();
+            }
+        }
+    }
+}
+
     void Movement()
     {
         if (cameraTransform == null) return;
@@ -43,6 +62,7 @@ public class PlayerController : Singleton<PlayerController>
 
     void Update()
     {
+        CheckForEnemies();
         Movement();
         if (Keyboard.current == null) return; // Prevents null reference errors
 

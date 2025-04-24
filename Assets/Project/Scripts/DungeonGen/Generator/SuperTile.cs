@@ -68,7 +68,12 @@ public void PlaceDecor(GameObject prefab, DecorType decorType)
     if(availableObjects.Count<=0) return;
     GameObject randomObj = availableObjects[Random.Range(0,availableObjects.Count)];
 
+
+
     GameObject obj = Instantiate(prefab);
+    if(decorType == DecorType.Wall)
+    obj.transform.forward = randomObj.transform.parent.right;
+
     obj.transform.position = randomObj.transform.position;
     occupied.Add(randomObj,obj);
 }
