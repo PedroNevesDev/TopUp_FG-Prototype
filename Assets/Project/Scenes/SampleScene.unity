@@ -10676,7 +10676,7 @@ MonoBehaviour:
   generateOnStart: 1
   superTilePrefab: {fileID: 3552886099303101551, guid: 9da7098c24a59499b99ba15f1aa091e2, type: 3}
   floors:
-  - layoutTexture: {fileID: 2800000, guid: 8a752fe5939054b26b2fd857eeac8d06, type: 3}
+  - layoutTexture: {fileID: 2800000, guid: a8e51df7ee70f4f488df9f77837b4c39, type: 3}
     decorLayers:
     - decorTexture: {fileID: 2800000, guid: d33f97b3a23554dfabaf2c9761c42670, type: 3}
       decorType: 1

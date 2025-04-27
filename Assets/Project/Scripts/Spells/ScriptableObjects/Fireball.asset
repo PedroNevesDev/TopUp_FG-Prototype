@@ -12,11 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7db659b895b60411cbcb7d4542c622a3, type: 3}
   m_Name: Fireball
   m_EditorClassIdentifier: 
+  attributes: 
   spellName: Fireball
   spellDescription: Throws a fireball that bounces 3 times.
   spellIcon: {fileID: 21300000, guid: 790543d0434624eabb5dbc29bf63e20b, type: 3}
-  cooldownDuration: 1
-  projectileCount: 1
+  cooldownDuration: 0
+  projectileCount: 5
   projectileMaxAngle: 360
   spellDuration: 0
   canBeCanceled: 0
