@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class ActiveSpell : Spell
 {
-    public override void Cast(Vector3 spawnPoint, Vector3 direction)
+    protected override void Cast(Vector3 spawnPoint, Vector3 direction)
     {
         if (myCard.onCooldown)
         {
@@ -15,7 +15,7 @@ public class ActiveSpell : Spell
         Debug.Log(spell.spellName + " cast!");
     }
 
-    public override void AfflictUser()
+    protected override void AfflictUser(PlayerController target)
     {
         if(myCard.onDuration)
         {

@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class FireballSpell : ActiveSpell
 {
-public override void Cast(Vector3 spawnPoint, Vector3 direction)
+protected override void Cast(Vector3 spawnPoint, Vector3 direction)
 {
     base.Cast(spawnPoint, direction);
 

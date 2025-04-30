@@ -2,9 +2,9 @@ using UnityEngine;
 
 public class BarrierSpell : ActiveSpell
 {
-    public override void AfflictUser()
+    protected override void AfflictUser(PlayerController target)
     {
-        base.AfflictUser();
+        base.AfflictUser(target);
         if(myCard.onDuration) return;
         if(myCard.onCooldown) return;
         

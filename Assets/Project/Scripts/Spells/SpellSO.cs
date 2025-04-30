@@ -5,6 +5,7 @@ using UnityEngine;
 public class SpellSO : ScriptableObject
 {
     public List<SpellAttributes> attributes = new List<SpellAttributes>();
+    public AbilityType abilityType;
     public string spellName;
     public string spellDescription;
     public Sprite spellIcon;
@@ -33,5 +34,11 @@ public enum SpellAttributes
     AOE,
     Chain,
     Duration,
+}
+
+public enum AbilityType
+{
+    Cast,
+    AfflictUser
 }
 

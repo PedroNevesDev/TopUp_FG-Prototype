@@ -72,13 +72,8 @@ void CheckForEnemies()
             {
                 if (bindedSpells.TryGetValue(key, out Spell newSpell))
                 {
-                    Debug.Log("Casting Spell: " + newSpell.name);
-
-                    if (Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out RaycastHit hit))
-                    {
-                        Vector3 direction = (hit.point - transform.position).normalized;
-                        newSpell.Cast(transform.position, direction);
-                    }
+                    if(TryPrepareSpellData(newSpell.spell.abilityType,out SpellEventData eventData))
+                    newSpell.Use(eventData);
                 }
 
 
@@ -96,6 +91,29 @@ void CheckForEnemies()
         }
 
     }
+
+bool TryPrepareSpellData(AbilityType type, out SpellEventData spellEventData)
+{
+    spellEventData = null;
+
+    switch (type)
+    {
+        case AbilityType.Cast:
+            if (Camera.main != null && Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out RaycastHit hit))
+            {
+                Vector3 direction = (hit.point - transform.position).normalized;
+                spellEventData = new SpellDirectionEventData(transform.position, direction);
+                return true;
+            }
+            break;
+
+        case AbilityType.AfflictUser:
+            spellEventData = new SpellAflictEventData(this);
+            return true;
+    }
+
+    return false;
+}
 }
 
 
