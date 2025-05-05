@@ -1,7 +1,7 @@
 using UnityEngine;
 using DG.Tweening;
 
-public class Enemy : MonoBehaviour
+public class Enemy : Damageable
 {
     public Transform target;
     public GameObject objectToSpawn;

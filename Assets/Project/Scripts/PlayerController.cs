@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -23,6 +24,12 @@ public class PlayerController : Singleton<PlayerController>
     public float enemyAwarenessRadius = 3f;
     public LayerMask whatIsEnemy;
 
+    public Animator myAnimator;
+
+    public Weapon currentWeapon;
+
+public GameObject mesh;
+
 void CheckForEnemies()
 {
     RaycastHit[] hits = Physics.SphereCastAll(transform.position,enemyAwarenessRadius,Vector3.up,whatIsEnemy);
@@ -38,26 +45,45 @@ void CheckForEnemies()
     }
 }
 
-    void Movement()
+void Movement()
+{
+    if (cameraTransform == null) return;
+
+    // Get camera-relative forward/right
+    Vector3 forward = cameraTransform.forward;
+    forward.y = 0f;
+    forward.Normalize();
+
+    Vector3 right = cameraTransform.right;
+    right.y = 0f;
+    right.Normalize();
+
+    // Get world-space move direction
+    Vector3 moveDirection = (forward * move.y + right * move.x).normalized;
+
+    // Smooth velocity change
+    Vector3 targetVelocity = moveDirection * speed;
+    Vector3 currentVelocity = rb.linearVelocity;
+    targetVelocity.y = currentVelocity.y; // preserve Y velocity
+
+    float smoothing = 10f;
+    Vector3 smoothedVelocity = Vector3.Lerp(currentVelocity, targetVelocity, Time.fixedDeltaTime * smoothing);
+    rb.linearVelocity = smoothedVelocity;
+
+    // Calculate horizontal speed (ignore vertical)
+    float horizontalSpeed = new Vector3(smoothedVelocity.x, 0, smoothedVelocity.z).magnitude;
+
+    // Update animator parameters
+    myAnimator.SetFloat("MovementSpeed", horizontalSpeed * 0.2f);
+    myAnimator.SetBool("IsMoving", horizontalSpeed > 0.1f);
+
+    // Rotate mesh if moving
+    if (horizontalSpeed > 0.1f)
     {
-        if (cameraTransform == null) return;
-
-        // Get camera's forward and right directions, ignoring Y (so movement stays level)
-        Vector3 forward = cameraTransform.forward;
-        forward.y = 0;
-        forward.Normalize();
-
-        Vector3 right = cameraTransform.right;
-        right.y = 0;
-        right.Normalize();
-
-        // Convert input into world-space movement
-        Vector3 moveDirection = (forward * move.y + right * move.x).normalized;
-
-        Vector3 newVel = moveDirection * speed;
-        newVel.y = rb.linearVelocity.y; // Preserve vertical velocity
-        rb.linearVelocity = newVel;
+        Vector3 direction = new Vector3(smoothedVelocity.x, 0, smoothedVelocity.z);
+        mesh.transform.forward = Vector3.Slerp(mesh.transform.forward, direction.normalized, Time.fixedDeltaTime * 10f);
     }
+}
 
 
     void Update()
@@ -89,7 +115,10 @@ void CheckForEnemies()
                 bindedSpells[key] = spells[i];
             }
         }
-
+        if(Input.GetKeyDown(KeyCode.Mouse0)&& currentWeapon!=null)
+        {
+            currentWeapon.Attack(myAnimator);
+        }
     }
 
 bool TryPrepareSpellData(AbilityType type, out SpellEventData spellEventData)
