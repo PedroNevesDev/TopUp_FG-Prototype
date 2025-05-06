@@ -13,10 +13,10 @@ public class DamageNumber : MonoBehaviour
         startColor = text.color;
         StartCoroutine(FadeAndRise());
     }
-
-    void OnServerInitialized()
+    public void Setup(string str)
     {
-        
+        text.text = str;
+        gameObject.SetActive(true);
     }
 
     private System.Collections.IEnumerator FadeAndRise()

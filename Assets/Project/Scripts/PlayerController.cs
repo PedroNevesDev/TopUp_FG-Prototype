@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.Cinemachine;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -27,6 +28,8 @@ public class PlayerController : Singleton<PlayerController>
     public Animator myAnimator;
 
     public Weapon currentWeapon;
+
+    [Range(0,1)]public float moveSpeedAttackMultiplier;
 
 public GameObject mesh;
 
@@ -62,7 +65,7 @@ void Movement()
     Vector3 moveDirection = (forward * move.y + right * move.x).normalized;
 
     // Smooth velocity change
-    Vector3 targetVelocity = moveDirection * speed;
+    Vector3 targetVelocity = moveDirection * speed * (currentWeapon==true&&currentWeapon.IsAttacking()?moveSpeedAttackMultiplier:1);
     Vector3 currentVelocity = rb.linearVelocity;
     targetVelocity.y = currentVelocity.y; // preserve Y velocity
 

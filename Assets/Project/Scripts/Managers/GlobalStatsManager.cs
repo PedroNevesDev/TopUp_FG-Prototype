@@ -13,6 +13,8 @@ public class GlobalStatsManager : Singleton<GlobalStatsManager>
     public float offensiveEfficiency = 1;
     public float physicalEfficiency = 1;
     public int overallEffectiveness = 1;
+
+    [Range(0,1)] public float enemyResist = 0;
     [Header("PreojectileStats")]
     public int additionalProjectiles = 0;
     public int additionalBounces = 0;

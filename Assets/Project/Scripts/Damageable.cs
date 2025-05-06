@@ -17,9 +17,13 @@ public class Damageable : MonoBehaviour
     private Coroutine fadeCoroutine;
 
     private ShakeEffect shakeEffect;
+    ObjectPool objectPool;
+    GlobalStatsManager globalStatsManager;
 
     void Start()
     {
+        objectPool = ObjectPool.Instance;
+        globalStatsManager = GlobalStatsManager.Instance;
         shakeEffect = GetComponent<ShakeEffect>();
         if (canvasGroup == null)
         {
@@ -31,7 +35,10 @@ public class Damageable : MonoBehaviour
 
     public void TakeDamage(float damage)
     {
-        health -= damage;
+        print(damage);
+        float proccessedDamage = damage * (globalStatsManager.enemyResist*damage);
+        health -= proccessedDamage;
+        objectPool.GetObject(globalStatsManager.damageNumberPrefab,transform.position+new Vector3(0,globalStatsManager.damageNumberPrefab.transform.lossyScale.y,0),Quaternion.identity).GetComponent<DamageNumber>().Setup(proccessedDamage.ToString());
         CheckHealth();
         UpdateBar();
         if (shakeEffect)

@@ -16,4 +16,10 @@ public PlayerController player;
 
         player.currentWeapon.ToggleColliders(false);
     }
+
+    public void EndOfAttack()
+    {
+        if (player.currentWeapon == null)return;
+        player.currentWeapon.OnAttackEnd();
+    }
 }

@@ -10,13 +10,11 @@ public class ShakeEffect : MonoBehaviour
     private Vector3 originalPos;
     private Tween currentShakeTween;
 
-    void Start()
-    {
-        originalPos = transform.localPosition;
-    }
+
 
     public void Shake()
     {
+        originalPos = transform.localPosition;
         // Cancel ongoing shake
         if (currentShakeTween != null && currentShakeTween.IsActive())
         {
