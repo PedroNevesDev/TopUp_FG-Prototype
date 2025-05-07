@@ -3,10 +3,11 @@ using DG.Tweening;
 using System.Collections;
 using UnityEngine.Rendering.Universal;
 using System.Linq;
-public class CardManager : MonoBehaviour
+public class CardManager : Singleton<CardManager>
 {
     [Header("Card References")]
     public RectTransform[] cards;
+    public Transform content;
 
     [Header("Position References")]
     public RectTransform handFanCenter;      // Cards fan out here in hand
@@ -42,6 +43,10 @@ public class CardManager : MonoBehaviour
     void Start()
     {
         MoveToDeckState(); // Start with cards collapsed in deck
+    }
+    public void AddCard(GameObject prefab)
+    {
+        Instantiate(prefab,transform);
     }
 
     void Update()

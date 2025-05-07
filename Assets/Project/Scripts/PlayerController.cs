@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.Cinemachine;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -63,7 +62,7 @@ public class PlayerController : Singleton<PlayerController>
     }
 }
 
-void AddEXP(float expAmmount)
+public void AddEXP(float expAmmount)
 {
     currentExp += expAmmount;
     if(currentExp>expPerLevel*level)

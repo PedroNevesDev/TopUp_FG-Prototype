@@ -22,8 +22,23 @@ public class Damageable : MonoBehaviour
     GlobalStatsManager globalStatsManager;
     Rigidbody rb;
 
-    public List<GameObject> drops = new List<GameObject>();
+    public List<DropData> drops = new List<DropData>();
 
+    [System.Serializable]
+    public class DropData
+    {
+        public GameObject drop;
+        public int min, max;
+
+        public void Drop(Vector3 pos)
+        {
+            int quantity = Random.Range(min,max+1);
+            for(int i = 0;i<quantity;i++)
+            {
+                ObjectPool.Instance.GetObject(drop,pos,Quaternion.identity).GetComponent<Rigidbody>().AddForce(new Vector3(Random.Range(0f,1f),Random.Range(0f,1f),Random.Range(0f,1f)),ForceMode.Impulse);
+            }
+        }
+    }
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -56,6 +71,8 @@ public class Damageable : MonoBehaviour
         }
         if(health==0)
         {
+            drops.ForEach(d=>d.Drop(transform.position));
+            StopAllCoroutines();
             objectPool.ReturnObject(gameObject);
         }
     }

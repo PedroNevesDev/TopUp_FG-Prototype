@@ -69,6 +69,12 @@ public class FireballProjectile : MonoBehaviour
         {
             ReturnToPool();
         }
+
+        if(collision.gameObject.TryGetComponent(out Damageable component))
+        {
+            component.TakeDamage(30,Vector3.zero);
+            ReturnToPool();
+        }
     }
 
     private void ReturnToPool()
