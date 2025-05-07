@@ -5,4 +5,6 @@ using System.Collections.Generic;
 public class WeaponData : ScriptableObject
 {
     public float weaponDamage = 45;
+    public bool hasKnockback = false;
+    public float knockback = 2f;
 }

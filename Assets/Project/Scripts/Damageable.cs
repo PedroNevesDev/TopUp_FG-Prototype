@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using System.Collections.Generic;
 
 public class Damageable : MonoBehaviour
 {
@@ -8,7 +9,7 @@ public class Damageable : MonoBehaviour
     public float health;
     public float maxHealth = 100f;
     public Image healthBar;
-
+    public bool isAffectedByKnockback;
     [Header("Bar Fade Settings")]
     public float barFadeOut = 2f;
     public float barFadeIn = 0.2f;
@@ -19,12 +20,16 @@ public class Damageable : MonoBehaviour
     private ShakeEffect shakeEffect;
     ObjectPool objectPool;
     GlobalStatsManager globalStatsManager;
+    Rigidbody rb;
+
+    public List<GameObject> drops = new List<GameObject>();
 
     void Start()
     {
+        rb = GetComponent<Rigidbody>();
         objectPool = ObjectPool.Instance;
         globalStatsManager = GlobalStatsManager.Instance;
-        shakeEffect = GetComponent<ShakeEffect>();
+        shakeEffect = GetComponentInChildren<ShakeEffect>();
         if (canvasGroup == null)
         {
             Debug.LogError("Missing CanvasGroup on health bar parent.");
@@ -33,17 +38,25 @@ public class Damageable : MonoBehaviour
         canvasGroup.alpha = 0; // Start invisible
     }
 
-    public void TakeDamage(float damage)
+    public void TakeDamage(float damage, Vector3 dirKnockback)
     {
-        print(damage);
-        float proccessedDamage = damage * (globalStatsManager.enemyResist*damage);
+        float proccessedDamage = damage - (globalStatsManager.enemyResist*damage);
         health -= proccessedDamage;
-        objectPool.GetObject(globalStatsManager.damageNumberPrefab,transform.position+new Vector3(0,globalStatsManager.damageNumberPrefab.transform.lossyScale.y,0),Quaternion.identity).GetComponent<DamageNumber>().Setup(proccessedDamage.ToString());
+        DamageNumber dmg= objectPool.GetObject(globalStatsManager.damageNumberPrefab,transform.position+new Vector3(0,2,0),Quaternion.identity).GetComponent<DamageNumber>();
+        dmg.Setup(proccessedDamage.ToString());
+        if(isAffectedByKnockback)
+        {
+            rb.AddForce(dirKnockback,ForceMode.Impulse);
+        }
         CheckHealth();
         UpdateBar();
         if (shakeEffect)
         {
             shakeEffect.Shake();
+        }
+        if(health==0)
+        {
+            objectPool.ReturnObject(gameObject);
         }
     }
 

@@ -20,6 +20,12 @@ public PlayerController player;
     public void EndOfAttack()
     {
         if (player.currentWeapon == null)return;
-        player.currentWeapon.OnAttackEnd();
+        player.currentWeapon.OnAttackComplete();
+    }
+
+    public void OpenCombo()
+    {
+        if (player.currentWeapon == null)return;
+        player.currentWeapon.OpenComboWindow();
     }
 }

@@ -70,7 +70,7 @@ public void PlaceDecor(GameObject prefab, DecorType decorType)
 
 
 
-    GameObject obj = Instantiate(prefab);
+    GameObject obj = ObjectPool.Instance.GetObject(prefab);
     if(decorType == DecorType.Wall)
     obj.transform.forward = randomObj.transform.parent.right;
 

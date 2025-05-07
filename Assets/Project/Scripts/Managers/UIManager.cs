@@ -1,45 +1,35 @@
 using System.Collections.Generic;
+using UnityEngine.UI;
+using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
 
 public class UIManager : Singleton<UIManager>
 {
-    public List<GameObject> menus = new List<GameObject>();
+    [Header("HP")]
+    public Image hpFill;
+    public TextMeshProUGUI hp;
 
-    void Update()
+    [Header("EXP")]
+    public Image expFill;
+    public TextMeshProUGUI levelText;
+    public TextMeshProUGUI exp;
+
+    public void UpdateHealth(float currentHealth,float maxHealth)
     {
-        if(Input.GetKeyDown(KeyCode.Escape))
-        {
-            if(menus.Count>0 && menus[0].activeSelf)
-            {
-                HideAllMenus();
-            }
-            else
-            {
-                OpenMenu(0);
-            }
-        }
-
+        hpFill.fillAmount = currentHealth/maxHealth;
+        hp.text = currentHealth+"/"+maxHealth;
     }
 
-    public void OpenMenu(Menus menuIndex)
+    public void UpdateExp(float currentExp, float neededExpToLevelUp)
     {
-        HideAllMenus();
-        if((int)menuIndex<menus.Count)
-        {
-            menus[(int)menuIndex].SetActive(true);
-        }
+        expFill.fillAmount=currentExp/neededExpToLevelUp;
+        exp.text = currentExp+"/"+neededExpToLevelUp;
     }
 
-    public void HideAllMenus()
+    public void UpdateLevel(int level)
     {
-        menus.ForEach(m=>m.SetActive(false));
+        levelText.text = level.ToString();
     }
-
 }
 
-public enum Menus
-{
-    CardMenu,
-    SkillTree
-}

@@ -1,106 +1,178 @@
+using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using NUnit.Framework;
 using UnityEngine;
 
 public class Weapon : MonoBehaviour
 {
     public WeaponData weaponData;
-    public TrailRenderer trailRenderer;
-    private List<Collider> attackColliders = new List<Collider>();
-
     public LayerMask whatToHit;
-
-    private GlobalStatsManager gsm;
-    public Animator cachedAnimator;
     public List<AnimData> attackAnimations = new List<AnimData>();
+    
+    private GlobalStatsManager gsm;
+    private Animator cachedAnimator;
+    private Dictionary<string, AnimData> animDictionary = new Dictionary<string, AnimData>();
+    
+    // Combo state
+    private int currentAttackIndex = 0;
+    private bool canAttack = true;
+    private bool comboAvailable = false;
+    private float comboWindow = 0.4f; // Adjust this in Inspector
+    private float comboWindowTimer;
 
-    Dictionary<string, AnimData> animDictionary = new Dictionary<string, AnimData>();
-
-
-    int currentAttackIndex = 0;
-    bool canAttack;
-
-    bool nextAttack;
+    public Weapon dualWield;
 
     void Start()
     {
-        attackColliders = GetComponents<Collider>().ToList();
         gsm = GlobalStatsManager.Instance;
-        attackAnimations.ForEach(anim =>{
+        foreach (var anim in attackAnimations)
+        {
             animDictionary.Add(anim.animation.name, anim);
-        });
-    }
-public void Attack(Animator animator)
-{
-    if (IsAttacking())
-    {
-        // Request combo continuation
-        nextAttack = true;
-        return;
+            // Initialize all colliders as disabled
+            foreach (var col in anim.colliders)
+            {
+                col.enabled = false;
+            }
+        }
     }
 
-    currentAttackIndex = 1;
-    animator.SetInteger("Attack", currentAttackIndex);
-    cachedAnimator = animator;
-    canAttack = false;
-}
-    
-    void Next()
+    void Update()
+    {
+        if (comboAvailable)
+        {
+            comboWindowTimer -= Time.deltaTime;
+            if (comboWindowTimer <= 0)
+            {
+                comboAvailable = false;
+                OnAttackComplete();
+            }
+        }
+    }
+
+    public void Attack(Animator animator)
+    {
+        if (!canAttack)
+        {
+            if (comboAvailable)
+            {
+                ContinueCombo(animator);
+            }
+            return;
+        }
+        
+        StartNewAttack(animator);
+    }
+
+    private void StartNewAttack(Animator animator)
+    {
+        currentAttackIndex = 1; // Start with first attack
+        canAttack = false;
+        SetAnimator(animator);
+        if(dualWield)
+        dualWield.SetAnimator(animator);
+        animator.SetInteger("Attack", currentAttackIndex);
+    }
+
+    private void ContinueCombo(Animator animator)
     {
         currentAttackIndex++;
-        if(currentAttackIndex >= attackAnimations.Count)
+        if (currentAttackIndex > attackAnimations.Count)
         {
-            currentAttackIndex = 1;
+            currentAttackIndex = 1; // Loop back to first attack
         }
+        
+        SetAnimator(animator);
+        if(dualWield)
+        dualWield.SetAnimator(animator);
+        animator.SetInteger("Attack", currentAttackIndex);
+        comboAvailable = false; // Reset until next window opens
     }
-    void OnTriggerEnter(Collider other)
-    {
-        if(other.TryGetComponent(out Damageable target))
-        {
-            target.TakeDamage(weaponData.weaponDamage*gsm.physicalEfficiency);
-        }
-    }
-    public void ToggleColliders(bool state)
-    {
-        if(!cachedAnimator)return;
-        string currentAnimationName = cachedAnimator.GetCurrentAnimatorClipInfo(0)[0].clip.name;
 
-        AnimData requestedData = animDictionary[currentAnimationName];
-        requestedData.colliders.ForEach(col=>col.enabled = state);
-        requestedData.trailRenderers.ForEach(trail=>{
-            trailRenderer.emitting = false;
-            trailRenderer.Clear();
-            trailRenderer.emitting = true;
-            trailRenderer.enabled = state;
-        });
-
-    }
-public void OnAttackEnd()
-{
-    
-
-    if (nextAttack)
+    // Called via Animation Event when combo can be chained
+    public void OpenComboWindow()
     {
-        nextAttack = false;
-        currentAttackIndex++;
-        if (currentAttackIndex >= attackAnimations.Count)
-        {
-            currentAttackIndex = 1; // Wrap combo to first attack
-        }
-        cachedAnimator.SetInteger("Attack", currentAttackIndex);
+        comboAvailable = true;
+        comboWindowTimer = comboWindow;
     }
-    else
+
+    // Called via Animation Event when attack fully completes
+    public void OnAttackComplete()
     {
         currentAttackIndex = 0;
-        cachedAnimator.SetInteger("Attack", 0);
         canAttack = true;
-        cachedAnimator = null;
+        comboAvailable = false;
+        
+        if (cachedAnimator != null)
+        {
+            cachedAnimator.SetInteger("Attack", 0);
+            DisableAllColliders();
+        }
     }
-}
+
+    public void ToggleColliders(bool state)
+    {
+
+
+        AnimatorStateInfo stateInfo = cachedAnimator.GetCurrentAnimatorStateInfo(0);
+        string clipName = GetCurrentAnimationName(cachedAnimator);
+        
+        if (animDictionary.TryGetValue(clipName, out AnimData animData))
+        {
+            foreach (var col in animData.colliders)
+            {
+                col.enabled = state;
+            }
+            
+            foreach (var trail in animData.trailRenderers)
+            {
+                trail.emitting = false;
+                trail.Clear();
+                trail.emitting = true;
+                trail.enabled = state;
+            }
+        }
+    }
+
+    private string GetCurrentAnimationName(Animator animator)
+    {
+        AnimatorClipInfo[] clipInfo = animator.GetCurrentAnimatorClipInfo(0);
+        return clipInfo.Length > 0 ? clipInfo[0].clip.name : "";
+    }
+
+    private void DisableAllColliders()
+    {
+        foreach (var anim in attackAnimations)
+        {
+            foreach (var col in anim.colliders)
+            {
+                col.enabled = false;
+            }
+        }
+    }
+
+    void OnTriggerEnter(Collider other)
+    {
+        if (other.TryGetComponent(out Damageable target))
+        {
+            target.TakeDamage(weaponData.weaponDamage * gsm.physicalEfficiency,weaponData.hasKnockback?(other.transform.position-cachedAnimator.transform.position).normalized*weaponData.knockback:Vector3.zero);
+            StopCoroutine(ApplyHitStop());
+            StartCoroutine(ApplyHitStop());
+        }
+    }
+    public void SetAnimator(Animator animator)
+    {
+        cachedAnimator = animator;
+    }
+    
     public bool IsAttacking()
     {
-        return currentAttackIndex !=0;
+        return currentAttackIndex != 0;
+    }
+
+    IEnumerator ApplyHitStop()
+    {
+        cachedAnimator.speed = 0;
+        yield return new WaitForSeconds(0.15f);
+        cachedAnimator.speed = 1;
     }
 }
 [System.Serializable]

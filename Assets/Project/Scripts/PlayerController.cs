@@ -31,9 +31,24 @@ public class PlayerController : Singleton<PlayerController>
 
     [Range(0,1)]public float moveSpeedAttackMultiplier;
 
-public GameObject mesh;
+    public GameObject mesh;
 
-void CheckForEnemies()
+    [Header("PlayerLevel")]
+    private int level=1;
+    public float expPerLevel=46.8f;
+    private float currentExp=0;
+
+    UIManager uiManager;
+
+    float hp=70;
+    float maxHp=70;
+    void Start()
+    {
+        uiManager = UIManager.Instance;
+        uiManager.UpdateExp(currentExp, expPerLevel*level);
+        uiManager.UpdateHealth(hp,maxHp);
+    }
+    void CheckForEnemies()
 {
     RaycastHit[] hits = Physics.SphereCastAll(transform.position,enemyAwarenessRadius,Vector3.up,whatIsEnemy);
     for(int i =0 ; i<hits.Length ; i++)
@@ -46,6 +61,20 @@ void CheckForEnemies()
             }
         }
     }
+}
+
+void AddEXP(float expAmmount)
+{
+    currentExp += expAmmount;
+    if(currentExp>expPerLevel*level)
+    {
+        float extraExp = currentExp - expPerLevel*level;
+        level++;
+        uiManager.UpdateLevel(level);
+        AddEXP(extraExp);
+        return;
+    }
+    uiManager.UpdateExp(currentExp, expPerLevel*level);
 }
 
 void Movement()
