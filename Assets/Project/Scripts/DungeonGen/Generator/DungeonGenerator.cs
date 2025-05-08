@@ -118,7 +118,7 @@ public class DungeonGenerator : Singleton<DungeonGenerator>
 
         if (generateDarkningTiles && theDarkningTilePrefab != null)
             FillWithDarkningTiles();
-
+        spawnedTiles.ForEach(tile =>tile.RandomlyReplaceWalls());
         isGenerating = false;
     }
 

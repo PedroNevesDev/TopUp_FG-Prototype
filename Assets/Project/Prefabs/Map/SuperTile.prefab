@@ -782,6 +782,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0b692b0f0919d42079b742da6821f66f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  randomMeshes:
+  - wall: {fileID: 8733429697405204941, guid: 71beb036b36866342a908bb391b585ae, type: 3}
+    rate: 3
+  - wall: {fileID: 2212009239438826721, guid: 6fa0b1427428548ae9017b178fe76f4b, type: 3}
+    rate: 0.2
+  - wall: {fileID: 2212009239438826721, guid: 0d274ba46ba074133b6e240f854ddbff, type: 3}
+    rate: 0.5
+  - wall: {fileID: 2212009239438826721, guid: 6ca4c2d6aab0a4b859f12829270687f6, type: 3}
+    rate: 0.2
   tileUp: {fileID: 0}
   tileDown: {fileID: 0}
   tileLeft: {fileID: 0}

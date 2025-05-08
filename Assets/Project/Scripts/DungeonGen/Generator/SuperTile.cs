@@ -4,7 +4,7 @@ using UnityEngine.UIElements;
 
 public class SuperTile : MonoBehaviour
 {
-    public List<Mesh> randomMesh = new List<Mesh>();
+    public List<RandomizeData> randomMeshes = new List<RandomizeData>();
     [Header("ConnectedTiles")]
     public SuperTile tileUp;
     public SuperTile tileDown;
@@ -163,23 +163,51 @@ public void PlaceDecor(GameObject prefab, DecorType decorType)
 
     public void RandomlyReplaceWalls()
     {
-        if(rightWall.activeSelf)
-        {
+        CheckAndChange(forwardWall);
+        CheckAndChange(leftWall);
+        CheckAndChange(rightWall);
+        CheckAndChange(backWall);
+    }
 
-        }
-        if(leftWall.activeSelf)
-        {
+[System.Serializable]
+public class RandomizeData
+{
+    public Mesh wall;
+    public float rate; // The higher the rate, the more likely this mesh is chosen
+}
 
-        }
-        if(forwardWall.activeSelf)
+void CheckAndChange(GameObject obj)
+{
+    if (obj.activeSelf)
+    {
+        if (obj.TryGetComponent(out MeshFilter mesh))
         {
-
-        }
-        if(backWall.activeSelf)
-        {
-
+            mesh.mesh = GetWeightedRandomMesh();
         }
     }
+}
+    Mesh GetWeightedRandomMesh()
+{
+    float totalWeight = 0f;
+    foreach (var data in randomMeshes)
+    {
+        totalWeight += data.rate;
+    }
+
+    float randomValue = Random.Range(0, totalWeight);
+    float currentWeight = 0f;
+
+    foreach (var data in randomMeshes)
+    {
+        currentWeight += data.rate;
+        if (randomValue <= currentWeight)
+        {
+            return data.wall;
+        }
+    }
+
+    return randomMeshes[0].wall; // Fallback
+}
     public Vector3 GetSurfacePosition()
     {
         if (floor != null)
