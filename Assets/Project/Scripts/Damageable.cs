@@ -5,10 +5,17 @@ using System.Collections.Generic;
 
 public class Damageable : MonoBehaviour
 {
+    [Header("Color Change")]
+    public Color targetColor;
+    Color initialColor;
+    public MeshRenderer meshRenderer;
     [Header("Health Related")]
     public float health;
     public float maxHealth = 100f;
     public Image healthBar;
+    public Image damageBar;
+
+    public CameraManager cameraManager;
     public bool isAffectedByKnockback;
     [Header("Bar Fade Settings")]
     public float barFadeOut = 2f;
@@ -41,6 +48,8 @@ public class Damageable : MonoBehaviour
     }
     void Start()
     {
+        initialColor = meshRenderer.sharedMaterial.color;
+        cameraManager = CameraManager.Instance;
         rb = GetComponent<Rigidbody>();
         objectPool = ObjectPool.Instance;
         globalStatsManager = GlobalStatsManager.Instance;
@@ -58,6 +67,7 @@ public class Damageable : MonoBehaviour
         float proccessedDamage = damage - (globalStatsManager.enemyResist*damage);
         health -= proccessedDamage;
         DamageNumber dmg= objectPool.GetObject(globalStatsManager.damageNumberPrefab,transform.position+new Vector3(0,2,0),Quaternion.identity).GetComponent<DamageNumber>();
+        cameraManager.ShakeActiveCamera(1,dirKnockback);
         dmg.Setup(proccessedDamage.ToString());
         if(isAffectedByKnockback)
         {
@@ -76,7 +86,12 @@ public class Damageable : MonoBehaviour
             objectPool.ReturnObject(gameObject);
         }
     }
-
+    IEnumerator ColorChange()
+    {
+        meshRenderer.sharedMaterial.color = targetColor;
+        yield return new WaitForSeconds(0.2f);
+        meshRenderer.sharedMaterial.color = initialColor;
+    }
     public void Heal(float heal)
     {
         health += heal;

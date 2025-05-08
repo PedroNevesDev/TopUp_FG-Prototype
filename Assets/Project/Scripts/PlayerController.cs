@@ -35,6 +35,7 @@ public class PlayerController : Singleton<PlayerController>
     [Header("PlayerLevel")]
     private int level=1;
     public float expPerLevel=46.8f;
+    public float increaseOfExpPerLevelMultiplier=0.1f;
     private float currentExp=0;
 
     UIManager uiManager;
@@ -44,8 +45,12 @@ public class PlayerController : Singleton<PlayerController>
     void Start()
     {
         uiManager = UIManager.Instance;
-        uiManager.UpdateExp(currentExp, expPerLevel*level);
+        uiManager.UpdateExp(currentExp, CalculateExpNeeded());
         uiManager.UpdateHealth(hp,maxHp);
+    }
+    float CalculateExpNeeded()
+    {
+        return expPerLevel * level + (expPerLevel*increaseOfExpPerLevelMultiplier)*level;
     }
     void CheckForEnemies()
 {
@@ -65,7 +70,7 @@ public class PlayerController : Singleton<PlayerController>
 public void AddEXP(float expAmmount)
 {
     currentExp += expAmmount;
-    if(currentExp>expPerLevel*level)
+    if(currentExp>CalculateExpNeeded())
     {
         float extraExp = currentExp - expPerLevel*level;
         level++;
@@ -73,7 +78,7 @@ public void AddEXP(float expAmmount)
         AddEXP(extraExp);
         return;
     }
-    uiManager.UpdateExp(currentExp, expPerLevel*level);
+    uiManager.UpdateExp(currentExp, CalculateExpNeeded());
 }
 
 void Movement()

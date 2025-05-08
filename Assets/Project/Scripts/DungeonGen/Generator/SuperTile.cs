@@ -4,6 +4,7 @@ using UnityEngine.UIElements;
 
 public class SuperTile : MonoBehaviour
 {
+    public List<Mesh> randomMesh = new List<Mesh>();
     [Header("ConnectedTiles")]
     public SuperTile tileUp;
     public SuperTile tileDown;
@@ -158,6 +159,26 @@ public void PlaceDecor(GameObject prefab, DecorType decorType)
             new Vector3(bounds.min.x, bounds.max.y, bounds.max.z), // Back-Left
             new Vector3(bounds.max.x, bounds.max.y, bounds.max.z)  // Back-Right
         };
+    }
+
+    public void RandomlyReplaceWalls()
+    {
+        if(rightWall.activeSelf)
+        {
+
+        }
+        if(leftWall.activeSelf)
+        {
+
+        }
+        if(forwardWall.activeSelf)
+        {
+
+        }
+        if(backWall.activeSelf)
+        {
+
+        }
     }
     public Vector3 GetSurfacePosition()
     {
