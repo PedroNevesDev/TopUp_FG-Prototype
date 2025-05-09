@@ -9,13 +9,14 @@ public class DungeonGenerator : Singleton<DungeonGenerator>
     [SerializeField] int tileDistance = 1;
     [SerializeField] Vector3 scale = Vector3.one;
     [SerializeField] Vector3 spawnOffset;
+    [SerializeField, Range(0f, 1f)] float tileSkipChance = 0.2f;
     [SerializeField] bool generateOnStart = true;
 
     [Header("Tile Prefab")]
     [SerializeField] SuperTile superTilePrefab;
 
     [Header("Texture Floor Data")]
-    [SerializeField] List<FloorData> floors;
+    [SerializeField] public MapData mapData;
 
     [Header("Special Object Prefabs")]
     [SerializeField] GameObject enemyPrefab;
@@ -44,8 +45,13 @@ public class DungeonGenerator : Singleton<DungeonGenerator>
 
     public Vector3 Scale { get => scale; set => scale = value; }
 
+    public List<SuperTile> GetAllTiles() => new List<SuperTile>(spawnedTiles);
+
+    private OrganicDecorationSystem ods;
+
     void Start()
     {
+        ods = GetComponent<OrganicDecorationSystem>();
         if (generateOnStart)
             GenerateDungeonImmediate();
     }
@@ -53,73 +59,82 @@ public class DungeonGenerator : Singleton<DungeonGenerator>
     #region Dungeon Generation
 
     public void GenerateDungeonImmediate()
+{
+    if (isGenerating) return;
+    isGenerating = true;
+
+    ClearDungeon();
+    grid.Clear();
+    spawnedTiles.Clear();
+
+    int baseY = 0;
+    List<Vector3Int> tilePositions = new List<Vector3Int>();
+    Dictionary<Vector3Int, Color> specialPixels = new();
+
+    foreach (var floor in mapData.floors)
     {
-        if (isGenerating) return;
-        isGenerating = true;
+        if (floor.layoutTexture == null) continue;
 
-        ClearDungeon();
-        grid.Clear();
-        spawnedTiles.Clear();
-
-        int baseY = 0;
-        List<Vector3Int> tilePositions = new List<Vector3Int>();
-        Dictionary<Vector3Int, Color> specialPixels = new();
-        Dictionary<Vector3Int, FloorData> decorSources = new();
-
-        foreach (var floor in floors)
+        for (int r = 0; r < floor.repeatCount; r++)
         {
-            if (floor.layoutTexture == null) continue;
-
-            for (int r = 0; r < floor.repeatCount; r++)
+            for (int z = 0; z < floor.layoutTexture.height; z++)
             {
-                for (int z = 0; z < floor.layoutTexture.height; z++)
+                for (int x = 0; x < floor.layoutTexture.width; x++)
                 {
-                    for (int x = 0; x < floor.layoutTexture.width; x++)
-                    {
-                        Color pixel = floor.layoutTexture.GetPixel(x, z);
-                        if (pixel.grayscale <= 0.5f) continue;
+                    Color pixel = floor.layoutTexture.GetPixel(x, z);
+                    if (pixel.grayscale <= 0.5f) continue;
+                    if (Random.value < tileSkipChance) continue;
 
-                        Vector3Int pos = new Vector3Int(x * tileDistance, baseY, z * tileDistance);
-                        tilePositions.Add(pos);
+                    Vector3Int pos = new Vector3Int(x * tileDistance, baseY, z * tileDistance);
+                    tilePositions.Add(pos);
 
-                        if (IsSpecialColor(pixel))
-                            specialPixels[pos] = pixel;
-
-                        if (HasDecorAt(floor, x, z))
-                            decorSources[pos] = floor;
-                    }
+                    if (IsSpecialColor(pixel))
+                        specialPixels[pos] = pixel;
                 }
-                baseY += tileDistance;
             }
+            baseY += tileDistance;
         }
+    }
 
-        foreach (var pos in tilePositions)
+    foreach (var pos in tilePositions)
+    {
+        SuperTile tile = SpawnTile(pos);
+        grid[pos] = tile;
+        spawnedTiles.Add(tile);
+
+        if (specialPixels.TryGetValue(pos, out var color))
+            HandleSpecial(color, pos, tile);
+    }
+
+    foreach (var kvp in grid)
+    {
+        foreach (var dir in GetAllPossibleDirections())
         {
-            SuperTile tile = SpawnTile(pos);
-            grid[pos] = tile;
-            spawnedTiles.Add(tile);
-
-            if (specialPixels.TryGetValue(pos, out var color))
-                HandleSpecial(color, pos, tile);
-
-            if (decorSources.TryGetValue(pos, out var floorData))
-                PlaceDecorations(tile, floorData, pos);
+            var neighborPos = kvp.Key + dir * tileDistance;
+            if (grid.TryGetValue(neighborPos, out var neighbor))
+                kvp.Value.Connect(neighbor, dir);
         }
+    }
 
-        foreach (var kvp in grid)
-        {
-            foreach (var dir in GetAllPossibleDirections())
-            {
-                var neighborPos = kvp.Key + dir * tileDistance;
-                if (grid.TryGetValue(neighborPos, out var neighbor))
-                    kvp.Value.Connect(neighbor, dir);
-            }
-        }
+    if (ods)
+        SetupOrganicDecorations();
 
-        if (generateDarkningTiles && theDarkningTilePrefab != null)
-            FillWithDarkningTiles();
-        spawnedTiles.ForEach(tile =>tile.RandomlyReplaceWalls());
-        isGenerating = false;
+    if (generateDarkningTiles && theDarkningTilePrefab != null)
+        FillWithDarkningTiles();
+
+    spawnedTiles.ForEach(tile => tile.RandomlyReplaceWalls());
+
+    isGenerating = false;
+}
+
+    private void SetupOrganicDecorations()
+    {
+        var decorSystem = GetComponent<OrganicDecorationSystem>();
+        if (decorSystem == null)
+            decorSystem = gameObject.AddComponent<OrganicDecorationSystem>();
+        
+        ods.Initialize(this);
+        ods.PopulateDungeon();
     }
 
     void FillWithDarkningTiles()
@@ -293,25 +308,5 @@ public class DungeonGenerator : Singleton<DungeonGenerator>
     }
 #endif
 }
-[System.Serializable]
-public class FloorData
-{
-    public Texture2D layoutTexture;
-    public List<DecorLayer> decorLayers = new List<DecorLayer>();
-    public int repeatCount = 1;
-}
-[System.Serializable]
-public class DecorLayer
-{
-    public Texture2D decorTexture;
-    public DecorType decorType;
-    public List<GameObject> listOfDecor = new List<GameObject>();
 
-}
-[System.Serializable]
-public enum DecorType
-{
-    Floor,
-    Wall,
-    Ceiling
-}
+

@@ -5683,6 +5683,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1601109410}
   - component: {fileID: 1601109411}
+  - component: {fileID: 1601109412}
   m_Layer: 0
   m_Name: DungeonGenerator
   m_TagString: Untagged
@@ -5722,20 +5723,10 @@ MonoBehaviour:
   tileDistance: 4
   scale: {x: 1, y: 1.15, z: 1}
   spawnOffset: {x: 0, y: 0.5, z: 0}
+  tileSkipChance: 0
   generateOnStart: 1
   superTilePrefab: {fileID: 3552886099303101551, guid: 9da7098c24a59499b99ba15f1aa091e2, type: 3}
-  floors:
-  - layoutTexture: {fileID: 2800000, guid: a8e51df7ee70f4f488df9f77837b4c39, type: 3}
-    decorLayers:
-    - decorTexture: {fileID: 2800000, guid: d33f97b3a23554dfabaf2c9761c42670, type: 3}
-      decorType: 1
-      listOfDecor:
-      - {fileID: 6863192435767951689, guid: 7ca85483fd98a451a952677fabcd0447, type: 3}
-    - decorTexture: {fileID: 2800000, guid: d33f97b3a23554dfabaf2c9761c42670, type: 3}
-      decorType: 0
-      listOfDecor:
-      - {fileID: 7083754134095954261, guid: dbc60e3342a264f86b14d4feba3f07b3, type: 3}
-    repeatCount: 1
+  mapData: {fileID: 11400000, guid: ece41763c2e9d482bb744c2ce554b5cd, type: 2}
   enemyPrefab: {fileID: 5569290702624666081, guid: ccb3c28785de940ebbeaa4f115119a2d, type: 3}
   healingPrefab: {fileID: 3752085732903609143, guid: aae347350717749af8a6dabf967e2a82, type: 3}
   goldPrefab: {fileID: 661500114145800665, guid: c2787d2e2599a4e2094e788570eb68ce, type: 3}
@@ -5748,6 +5739,21 @@ MonoBehaviour:
   theDarkningTilePrefab: {fileID: -8563338142784238332, guid: bfd0e1f381c124b9f8390b9ce8f75b8a, type: 3}
   darkningRange: 15
   generateDarkningTiles: 1
+--- !u!114 &1601109412
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1601109409}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: be8c378c6a265440ca5efb8ec5e128c7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  decorLayers:
+  - {fileID: 11400000, guid: 66a0b145d4f32455b965552c3ab409d6, type: 2}
+  visualizeSpawnPoints: 1
 --- !u!1 &1604364732
 GameObject:
   m_ObjectHideFlags: 0
