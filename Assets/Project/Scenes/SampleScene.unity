@@ -2775,6 +2775,27 @@ SpringJoint:
   m_EnablePreprocessing: 1
   m_MassScale: 1
   m_ConnectedMassScale: 1
+--- !u!1 &984490823 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2994428777015069369, guid: 9c885328dca164499b454ac51f77319d, type: 3}
+  m_PrefabInstance: {fileID: 3245033516349802345}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &984490828
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 984490823}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 865d48963362b49cc8c6dcf1de9ac248, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  projectiles: -53
+  fireDamage: -161.89674
+  cooldownReduction: 0.1
+  appliedModifiers: []
 --- !u!1 &993768310
 GameObject:
   m_ObjectHideFlags: 0
@@ -28517,6 +28538,9 @@ PrefabInstance:
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 2994428777015069369, guid: 9c885328dca164499b454ac51f77319d, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 984490828}
     - targetCorrespondingSourceObject: {fileID: 509675190929874397, guid: 9c885328dca164499b454ac51f77319d, type: 3}
       insertIndex: -1
       addedObject: {fileID: 981154771}

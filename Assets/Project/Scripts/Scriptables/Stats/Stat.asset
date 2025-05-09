@@ -20,9 +20,9 @@ MonoBehaviour:
     minValue: -3
     maxValue: 3
   currentGenerated:
-  - targetField: projectiles
-    valueToAdd: -1
   - targetField: fireDamage
-    valueToAdd: -1.335179
+    valueToAdd: -1.619505
+  - targetField: projectiles
+    valueToAdd: 3
   numberOfStatsToGenerate: 2
   generateSingleLowPositive: 0
