@@ -7,9 +7,11 @@ public class GlobalStatsManager : Singleton<GlobalStatsManager>
     public GameObject damageNumberPrefab;
     public bool healthBars = false;
 
+    public float attackSpeed = 1;
+
     [Header("Global Stats")]
     public float protectiveEfficiency = 1;
-    public float supportEfficiency = 1;
+    public float dexterityEfficiency = 1;
     public float offensiveEfficiency = 1;
     public float physicalEfficiency = 1;
     public int overallEffectiveness = 1;

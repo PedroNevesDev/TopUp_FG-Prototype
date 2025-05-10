@@ -9942,6 +9942,7 @@ GameObject:
   - component: {fileID: 5091493168640894123}
   - component: {fileID: 900703144525231684}
   - component: {fileID: 7159127593756666401}
+  - component: {fileID: 7836446587553335923}
   m_Layer: 6
   m_Name: VFX_Bouncing_Fireball
   m_TagString: Untagged
@@ -9984,6 +9985,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f6ce85120952b49a792c51f7d871a1c3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  spell: {fileID: 11400000, guid: fb94eb1647fd340db8a73de4c85ff68a, type: 2}
   maxBounceCount: 3
   bounceLossMultiplier: 1
   throwForce: 13
@@ -10042,6 +10044,27 @@ SphereCollider:
   m_Enabled: 1
   serializedVersion: 3
   m_Radius: 0.4
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!135 &7836446587553335923
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4457390620143002123}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 0.65
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &4951985303655608133
 GameObject:

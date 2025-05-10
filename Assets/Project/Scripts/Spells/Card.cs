@@ -11,6 +11,7 @@ public class Card : MonoBehaviour
     public Image darkning;
     public Image cdImage;
 
+    public TextMeshProUGUI levelText;
     public TextMeshProUGUI cdText;
 
     float currentCD;
@@ -21,13 +22,17 @@ public class Card : MonoBehaviour
     public bool onDuration = false;
 
     float currentDuration;
+
+    public SpellSO SpellSO { get => spellSO; set => spellSO = value; }
+
     public void Setup(SpellSO spellData)
     {
         SetText(spellData.cooldownDuration);
         spellSO = spellData;
         cardTitle.text = spellData.spellName;
-        cardDescription.text = spellData.spellDescription;
+        cardDescription.text = string.Format(spellData.spellDescription,spellData.ProccessedValue());
         spellImage.sprite = spellData.spellIcon;
+        levelText.text = spellData.abilityLevel.ToString();
     }
     void FixedUpdate()
     {

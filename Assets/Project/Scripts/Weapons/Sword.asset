@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: Sword
   m_EditorClassIdentifier: 
   weaponDamage: 45
-  attackAnimations:
-  - animation: {fileID: 7400000, guid: 5f63851fdfe15434ca055110ae96e818, type: 2}
-    animationSpeed: 1
+  hasKnockback: 0
+  knockback: 2
+  attackSpeed: 1

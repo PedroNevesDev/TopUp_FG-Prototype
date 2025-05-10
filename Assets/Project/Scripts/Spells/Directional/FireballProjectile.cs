@@ -4,6 +4,7 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody))]
 public class FireballProjectile : MonoBehaviour
 {
+    public SpellSO spell;
     public int maxBounceCount = 3; // Maximum number of bounces before returning to pool
     public float bounceLossMultiplier = 0.8f; // Loss of velocity per bounce
     public float throwForce = 15f; // Initial throw force
@@ -16,22 +17,13 @@ public class FireballProjectile : MonoBehaviour
 
     public List<TrailRenderer> trails = new List<TrailRenderer>();
 
-    GlobalStatsManager globalStats;
-
-    void Start()
-    {
-        globalStats = GlobalStatsManager.Instance;   
-    }
     public void OnEnable()
     {
         rb.linearVelocity = Vector3.zero; // Ensure no old forces remain
         rb.angularVelocity = Vector3.zero;
         rb.WakeUp(); // Reactivate physics engine processing
-        if(globalStats==null)
-        {
-            globalStats = GlobalStatsManager.Instance;
-        }
-        currentBounceCount = maxBounceCount+globalStats.additionalBounces;
+
+        currentBounceCount = spell.GetBounces();
 
         // Throw the object after ensuring it's fully active
         ThrowObject();
@@ -69,11 +61,15 @@ public class FireballProjectile : MonoBehaviour
         {
             ReturnToPool();
         }
+    }
 
-        if(collision.gameObject.TryGetComponent(out Damageable component))
+    private void OnTriggerEnter(Collider other)
+    {
+        if(other.gameObject.TryGetComponent(out Damageable component))
         {
-            component.TakeDamage(30,Vector3.zero);
+            component.TakeDamage(spell.ProccessedValue(),component.transform.position-transform.position *0.1f);
             ReturnToPool();
+            return;
         }
     }
 

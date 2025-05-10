@@ -17,6 +17,8 @@ public class PlayerController : Singleton<PlayerController>
 
     public void OnMove(InputAction.CallbackContext context) => move = context.action.ReadValue<Vector2>();
 
+    [Header("Movement Settings")]
+public float rotationSmoothness = 5f;
 
     public Transform cardHolder;
 
@@ -52,20 +54,19 @@ public class PlayerController : Singleton<PlayerController>
     {
         return expPerLevel * level + (expPerLevel*increaseOfExpPerLevelMultiplier)*level;
     }
-    void CheckForEnemies()
+void CheckForEnemies()
 {
-    RaycastHit[] hits = Physics.SphereCastAll(transform.position,enemyAwarenessRadius,Vector3.up,whatIsEnemy);
-    for(int i =0 ; i<hits.Length ; i++)
+    Collider[] hits = Physics.OverlapSphere(transform.position, enemyAwarenessRadius, whatIsEnemy);
+    foreach (Collider hit in hits)
     {
-        if(hits[i].collider.TryGetComponent(out Enemy enemy))
+        if (hit.TryGetComponent(out Enemy enemy) && !enemy.isActivated)
         {
-            if(!enemy.isActivated)
-            {
-                enemy.ActivateEnemy();
-            }
+            enemy.target = transform; // Make sure enemy knows who to chase
+            enemy.ActivateEnemy();
         }
     }
 }
+
 
 public void AddEXP(float expAmmount)
 {
@@ -104,7 +105,10 @@ void Movement()
 
     float smoothing = 10f;
     Vector3 smoothedVelocity = Vector3.Lerp(currentVelocity, targetVelocity, Time.fixedDeltaTime * smoothing);
-    rb.linearVelocity = smoothedVelocity;
+Vector3 velocityChange = smoothedVelocity - rb.linearVelocity;
+velocityChange.y = 0; // don't mess with vertical forces like gravity
+rb.AddForce(velocityChange, ForceMode.VelocityChange);
+
 
     // Calculate horizontal speed (ignore vertical)
     float horizontalSpeed = new Vector3(smoothedVelocity.x, 0, smoothedVelocity.z).magnitude;
@@ -117,15 +121,51 @@ void Movement()
     if (horizontalSpeed > 0.1f)
     {
         Vector3 direction = new Vector3(smoothedVelocity.x, 0, smoothedVelocity.z);
-        mesh.transform.forward = Vector3.Slerp(mesh.transform.forward, direction.normalized, Time.fixedDeltaTime * 10f);
+mesh.transform.forward = Vector3.Slerp(mesh.transform.forward, direction.normalized, Time.deltaTime * rotationSmoothness);
+
     }
+}
+void FixedUpdate()
+{
+    if (cameraTransform == null) return;
+
+    Vector3 forward = cameraTransform.forward;
+    forward.y = 0f;
+    forward.Normalize();
+
+    Vector3 right = cameraTransform.right;
+    right.y = 0f;
+    right.Normalize();
+
+    Vector3 moveDirection = (forward * move.y + right * move.x).normalized;
+
+    float appliedSpeed = speed * (currentWeapon != null && currentWeapon.IsAttacking() ? moveSpeedAttackMultiplier : 1f);
+    Vector3 desiredVelocity = moveDirection * appliedSpeed;
+    desiredVelocity.y = rb.linearVelocity.y;
+
+    Vector3 velocityChange = desiredVelocity - rb.linearVelocity;
+    velocityChange.y = 0f; // do not modify gravity
+
+    rb.AddForce(velocityChange, ForceMode.VelocityChange); // smooth "pulling" feel
+
+    // Rotation
+    if (moveDirection.magnitude > 0.1f)
+    {
+        Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
+        mesh.transform.rotation = Quaternion.Slerp(mesh.transform.rotation, targetRotation, Time.deltaTime * rotationSmoothness);
+    }
+
+    // Animator smoothing
+    float horizontalSpeed = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z).magnitude;
+    float animationSpeed = Mathf.Lerp(myAnimator.GetFloat("MovementSpeed"), horizontalSpeed * 0.2f, Time.deltaTime * 10f);
+    myAnimator.SetFloat("MovementSpeed", animationSpeed);
+    myAnimator.SetBool("IsMoving", horizontalSpeed > 0.1f);
 }
 
 
     void Update()
     {
         CheckForEnemies();
-        Movement();
         if (Keyboard.current == null) return; // Prevents null reference errors
 
         foreach (var key in bindedSpells.Keys) // Only check bound keys
@@ -134,7 +174,7 @@ void Movement()
             {
                 if (bindedSpells.TryGetValue(key, out Spell newSpell))
                 {
-                    if(TryPrepareSpellData(newSpell.spell.abilityType,out SpellEventData eventData))
+                    if(TryPrepareSpellData(newSpell.spell,out SpellEventData eventData))
                     newSpell.Use(eventData);
                 }
 
@@ -157,17 +197,25 @@ void Movement()
         }
     }
 
-bool TryPrepareSpellData(AbilityType type, out SpellEventData spellEventData)
+bool TryPrepareSpellData(SpellSO spell, out SpellEventData spellEventData)
 {
     spellEventData = null;
 
-    switch (type)
+    switch (spell.abilityType)
     {
         case AbilityType.Cast:
             if (Camera.main != null && Physics.Raycast(Camera.main.ScreenPointToRay(Input.mousePosition), out RaycastHit hit))
             {
-                Vector3 direction = (hit.point - transform.position).normalized;
-                spellEventData = new SpellDirectionEventData(transform.position, direction);
+                Vector3 basePosition = transform.position;
+                Vector3 offset = transform.forward * spell.spawnOffset.z
+                            + transform.right * spell.spawnOffset.x
+                            + transform.up * spell.spawnOffset.y;
+
+                Vector3 spawnPoint = basePosition + offset;
+                Vector3 direction = (hit.point - spawnPoint).normalized;
+
+                spellEventData = new SpellDirectionEventData(spawnPoint, direction);
+
                 return true;
             }
             break;

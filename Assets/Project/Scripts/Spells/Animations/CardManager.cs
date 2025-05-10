@@ -9,6 +9,8 @@ public class CardManager : Singleton<CardManager>
     public RectTransform[] cards;
     public Transform content;
 
+    public Card cardPrefab;
+
     [Header("Position References")]
     public RectTransform handFanCenter;      // Cards fan out here in hand
     public RectTransform deckStackPosition;  // Cards collapse here in deck state
@@ -44,9 +46,12 @@ public class CardManager : Singleton<CardManager>
     {
         MoveToDeckState(); // Start with cards collapsed in deck
     }
-    public void AddCard(GameObject prefab)
+    public void AddCard(SpellSO spellData)
     {
-        Instantiate(prefab,transform);
+        Card card = Instantiate(cardPrefab,transform);
+        card.GetComponent<Spell>().spell = spellData;
+        spellData.Initialize(card);
+
     }
 
     void Update()

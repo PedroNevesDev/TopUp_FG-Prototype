@@ -67,7 +67,7 @@ public class Damageable : MonoBehaviour
         float proccessedDamage = damage - (globalStatsManager.enemyResist*damage);
         health -= proccessedDamage;
         DamageNumber dmg= objectPool.GetObject(globalStatsManager.damageNumberPrefab,transform.position+new Vector3(0,2,0),Quaternion.identity).GetComponent<DamageNumber>();
-        cameraManager.ShakeActiveCamera(1,dirKnockback);
+        cameraManager.ShakeActiveCamera(0.5f,dirKnockback);
         dmg.Setup(proccessedDamage.ToString());
         if(isAffectedByKnockback)
         {

@@ -21,6 +21,8 @@ public class Weapon : MonoBehaviour
 
     public Weapon dualWield;
 
+    bool canDamage = false;
+
     void Start()
     {
         gsm = GlobalStatsManager.Instance;
@@ -58,8 +60,14 @@ public class Weapon : MonoBehaviour
             }
             return;
         }
-        
+        animator.SetFloat("AttackSpeed",weaponData.attackSpeed*gsm.attackSpeed);
         StartNewAttack(animator);
+
+        if(dualWield)
+        {
+            dualWield.canDamage = true;
+        }
+        canDamage = true;
     }
 
     private void StartNewAttack(Animator animator)
@@ -151,8 +159,9 @@ public class Weapon : MonoBehaviour
 
     void OnTriggerEnter(Collider other)
     {
-        if (other.TryGetComponent(out Damageable target))
+        if (other.TryGetComponent(out Damageable target)&&canDamage)
         {
+            canDamage = false;
             target.TakeDamage(weaponData.weaponDamage * gsm.physicalEfficiency,weaponData.hasKnockback?(other.transform.position-cachedAnimator.transform.position).normalized*weaponData.knockback:Vector3.zero);
             StopCoroutine(ApplyHitStop());
             StartCoroutine(ApplyHitStop());
@@ -182,4 +191,6 @@ public class AnimData
 
     public List<TrailRenderer> trailRenderers;
     public List<Collider> colliders = new List<Collider>(); // Names of colliders to activate
+
+    public float attackSpeed;
 }

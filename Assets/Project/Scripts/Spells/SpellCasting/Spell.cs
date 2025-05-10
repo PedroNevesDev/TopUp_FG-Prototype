@@ -10,9 +10,9 @@ public class Spell : MonoBehaviour
     public SpellSO spell;
 
     public GlobalStatsManager globalStats;
+
     void Start()
     {
-        myCard.Setup(spell);
         globalStats = GlobalStatsManager.Instance;
     }
 
@@ -69,3 +69,5 @@ public class SpellDirectionEventData : SpellEventData
         direction = dir;
     }
 }
+
+
