@@ -21,7 +21,6 @@ public class SuperTile : MonoBehaviour
     public GameObject forwardWall;
     public GameObject backWall;
     public GameObject floor;
-    public GameObject ceiling;
 
     // Cache if the walls have been disabled to avoid redundant SetActive calls
     private bool rightWallDisabled = false;
@@ -78,8 +77,6 @@ public void PlaceDecor(GameObject prefab, DecorType decorType)
 
     obj.transform.position = randomObj.transform.position;
     occupied.Add(randomObj,obj);
-    if(!obj.TryGetComponent(out Enemy enemy))
-        obj.isStatic = true;
 }
 
     public void Connect(SuperTile other, Vector3Int direction)
