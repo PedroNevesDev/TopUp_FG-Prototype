@@ -1,8 +1,12 @@
 using UnityEngine;
 using DG.Tweening;
+using System.Collections;
 
 public class Enemy : Damageable
 {
+    public Collider attackCollision;
+    public DamageArea damageArea;
+    public float attackpreptime;
     public Transform target; // The player
 
     public Transform maskTarget;
@@ -17,8 +21,6 @@ public class Enemy : Damageable
     public bool isActivated = false;
     private GameObject spawnedObject;
     private bool isActivating = false;
-
-
     private void Update()
     {
         if (!isActivated || target == null) return;
@@ -27,6 +29,7 @@ public class Enemy : Damageable
 
         if (distance < detectionRadius && distance > attackRange)
         {
+            attackCollision.enabled = false;
             // Move toward player
             Vector3 direction = (target.position - transform.position).normalized;
             direction.y = 0f; // Prevent upward movement
@@ -39,11 +42,20 @@ public class Enemy : Damageable
         }
         else if (distance <= attackRange)
         {
+            StopCoroutine(StartAttack());
+            StartCoroutine(StartAttack());
+            
             Debug.Log("Enemy is in range and preparing to attack.");
             // Trigger attack animation or logic
         }
     }
-
+IEnumerator StartAttack()
+{
+    damageArea.damage = globalStatsManager.enemyDamage;
+    damageArea.gameObject.SetActive(true);
+    yield return new WaitForSeconds(attackpreptime);
+    attackCollision.enabled = true;
+}
 public void ActivateEnemy()
 {
     if (target == null || isActivated || isActivating) return;

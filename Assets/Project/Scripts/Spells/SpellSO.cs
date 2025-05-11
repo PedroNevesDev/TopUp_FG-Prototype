@@ -46,13 +46,19 @@ public class SpellSO : ScriptableObject
         gsm = GlobalStatsManager.Instance;
         UpdateCard();
     }
-
+    public void Clear()
+    {
+        myCard = null;
+    }
     public void UpdateCard()
     {
         myCard.Setup(this);
     }
     public float ProccessedValue()
     {
+        if(gsm==null)
+        gsm = GlobalStatsManager.Instance;
+        
         float efficiency = 1;
         switch(spellCategory)
         {

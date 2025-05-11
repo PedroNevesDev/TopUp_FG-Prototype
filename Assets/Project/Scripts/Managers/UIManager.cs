@@ -25,8 +25,27 @@ public class UIManager : Singleton<UIManager>
     private Coroutine damageCoroutine;
     private Coroutine expCoroutine;
 
+    private UIDeathPanelController deathPannel;
+    private LevelManager levelManager;
+    public void ShowPlayerDeathUI()
+    {
+        
+        if(deathPannel)
+        {
+            levelManager.TogglePause(true);
+            deathPannel.ShowDeathPanel();     
+        }
+
+    }
+
+    public void Unpause()
+    {
+        levelManager.TogglePause(false);
+    }
     private void Start()
     {
+        deathPannel = GetComponent<UIDeathPanelController>();
+        levelManager = LevelManager.Instance;
         // Initialize fills
         if (hpFill) hpFill.fillAmount = 1f;
         if (damageFill) damageFill.fillAmount = 1f;

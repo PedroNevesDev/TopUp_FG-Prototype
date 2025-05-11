@@ -11,7 +11,8 @@ GameObject:
   - component: {fileID: 2388017350335723780}
   - component: {fileID: 2985794684272592980}
   - component: {fileID: 1604713649922650010}
-  - component: {fileID: 2901607175396130257}
+  - component: {fileID: 2703609060197548545}
+  - component: {fileID: 207658641043104529}
   m_Layer: 6
   m_Name: VFX_IceSpikes
   m_TagString: Untagged
@@ -124,7 +125,7 @@ VFXRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
---- !u!114 &2901607175396130257
+--- !u!114 &2703609060197548545
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -133,7 +134,29 @@ MonoBehaviour:
   m_GameObject: {fileID: 942125829524649685}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 63ebd97e44a534fb5bc044e324388f55, type: 3}
+  m_Script: {fileID: 11500000, guid: 30b3fa4989747e746af51c7e8b5d1c3a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  targetGameObject: {fileID: 942125829524649685}
+  returnTimer: 3
+  spellSO: {fileID: 11400000, guid: a97d968a7cf734045971ea7a76c687a4, type: 2}
+--- !u!65 &207658641043104529
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 942125829524649685}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 3.19, y: 1.58, z: 6.99}
+  m_Center: {x: 0, y: 0.37, z: 2.52}

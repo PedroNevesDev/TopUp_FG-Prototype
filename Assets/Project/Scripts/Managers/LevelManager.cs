@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class LevelManager : MonoBehaviour
+public class LevelManager : Singleton<LevelManager>
 {
     void Update()
     {
@@ -10,8 +10,16 @@ public class LevelManager : MonoBehaviour
             Restart();
         }   
     }
-    void Restart()
+    public void Restart()
     {
+        TogglePause(false);
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
+
+    public void TogglePause(bool state)
+    {
+        Time.timeScale = state?0:1;
+    }
+
+
 }

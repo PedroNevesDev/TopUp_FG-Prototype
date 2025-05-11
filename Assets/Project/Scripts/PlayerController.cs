@@ -5,10 +5,10 @@ using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class PlayerController : Singleton<PlayerController>
+public class PlayerController : PlayerDamageable
 {
     public float speed;
-    public Rigidbody rb;
+    public Rigidbody myRigidbody;
     public Transform cameraTransform; // Reference to the camera
 
     private Vector2 move;
@@ -40,15 +40,11 @@ public float rotationSmoothness = 5f;
     public float increaseOfExpPerLevelMultiplier=0.1f;
     private float currentExp=0;
 
-    UIManager uiManager;
-
-    float hp=70;
     float maxHp=70;
     void Start()
     {
         uiManager = UIManager.Instance;
         uiManager.UpdateExp(currentExp, CalculateExpNeeded());
-        uiManager.UpdateHealth(hp,maxHp);
     }
     float CalculateExpNeeded()
     {
@@ -100,14 +96,14 @@ void Movement()
 
     // Smooth velocity change
     Vector3 targetVelocity = moveDirection * speed * (currentWeapon==true&&currentWeapon.IsAttacking()?moveSpeedAttackMultiplier:1);
-    Vector3 currentVelocity = rb.linearVelocity;
+    Vector3 currentVelocity = myRigidbody.linearVelocity;
     targetVelocity.y = currentVelocity.y; // preserve Y velocity
 
     float smoothing = 10f;
     Vector3 smoothedVelocity = Vector3.Lerp(currentVelocity, targetVelocity, Time.fixedDeltaTime * smoothing);
-Vector3 velocityChange = smoothedVelocity - rb.linearVelocity;
+Vector3 velocityChange = smoothedVelocity - myRigidbody.linearVelocity;
 velocityChange.y = 0; // don't mess with vertical forces like gravity
-rb.AddForce(velocityChange, ForceMode.VelocityChange);
+myRigidbody.AddForce(velocityChange, ForceMode.VelocityChange);
 
 
     // Calculate horizontal speed (ignore vertical)
@@ -141,12 +137,12 @@ void FixedUpdate()
 
     float appliedSpeed = speed * (currentWeapon != null && currentWeapon.IsAttacking() ? moveSpeedAttackMultiplier : 1f);
     Vector3 desiredVelocity = moveDirection * appliedSpeed;
-    desiredVelocity.y = rb.linearVelocity.y;
+    desiredVelocity.y = myRigidbody.linearVelocity.y;
 
-    Vector3 velocityChange = desiredVelocity - rb.linearVelocity;
+    Vector3 velocityChange = desiredVelocity - myRigidbody.linearVelocity;
     velocityChange.y = 0f; // do not modify gravity
 
-    rb.AddForce(velocityChange, ForceMode.VelocityChange); // smooth "pulling" feel
+    myRigidbody.AddForce(velocityChange, ForceMode.VelocityChange); // smooth "pulling" feel
 
     // Rotation
     if (moveDirection.magnitude > 0.1f)
@@ -156,7 +152,7 @@ void FixedUpdate()
     }
 
     // Animator smoothing
-    float horizontalSpeed = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z).magnitude;
+    float horizontalSpeed = new Vector3(myRigidbody.linearVelocity.x, 0, myRigidbody.linearVelocity.z).magnitude;
     float animationSpeed = Mathf.Lerp(myAnimator.GetFloat("MovementSpeed"), horizontalSpeed * 0.2f, Time.deltaTime * 10f);
     myAnimator.SetFloat("MovementSpeed", animationSpeed);
     myAnimator.SetBool("IsMoving", horizontalSpeed > 0.1f);

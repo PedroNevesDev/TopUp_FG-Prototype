@@ -1031,6 +1031,7 @@ MonoBehaviour:
   spellImage: {fileID: 6810104716148565995}
   darkning: {fileID: 6266176535853840799}
   cdImage: {fileID: 7565458187558543124}
+  levelText: {fileID: 100333428602529606}
   cdText: {fileID: 2570328900363340604}
   onCooldown: 0
   onDuration: 0

@@ -159,7 +159,7 @@ public class Weapon : MonoBehaviour
 
     void OnTriggerEnter(Collider other)
     {
-        if (other.TryGetComponent(out Damageable target)&&canDamage)
+        if (!other.CompareTag("Player")&&other.TryGetComponent(out Damageable target)&&canDamage)
         {
             canDamage = false;
             target.TakeDamage(weaponData.weaponDamage * gsm.physicalEfficiency,weaponData.hasKnockback?(other.transform.position-cachedAnimator.transform.position).normalized*weaponData.knockback:Vector3.zero);

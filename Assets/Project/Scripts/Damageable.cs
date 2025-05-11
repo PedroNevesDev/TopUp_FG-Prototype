@@ -26,7 +26,7 @@ public class Damageable : MonoBehaviour
 
     private ShakeEffect shakeEffect;
     ObjectPool objectPool;
-    GlobalStatsManager globalStatsManager;
+    protected GlobalStatsManager globalStatsManager;
     Rigidbody rb;
 
     public List<DropData> drops = new List<DropData>();
@@ -71,7 +71,7 @@ public class Damageable : MonoBehaviour
         dmg.Setup(proccessedDamage.ToString());
         if(isAffectedByKnockback)
         {
-            rb.AddForce(dirKnockback,ForceMode.Impulse);
+            rb.AddForce(dirKnockback.normalized*4,ForceMode.Impulse);
         }
         CheckHealth();
         UpdateBar();

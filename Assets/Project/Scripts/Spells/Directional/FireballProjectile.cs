@@ -65,7 +65,7 @@ public class FireballProjectile : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if(other.gameObject.TryGetComponent(out Damageable component))
+        if(!other.CompareTag("Player")&&other.TryGetComponent(out Damageable component))
         {
             component.TakeDamage(spell.ProccessedValue(),component.transform.position-transform.position *0.1f);
             ReturnToPool();
