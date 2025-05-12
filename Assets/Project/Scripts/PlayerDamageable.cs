@@ -30,6 +30,12 @@ public class PlayerDamageable : MonoBehaviour
         uiManager.UpdateHealth(health, maxHealth);
     }
 
+    public void AddHealth(float ammountIncreased)
+    {
+        maxHealth+=ammountIncreased;
+        health+=ammountIncreased;
+        uiManager.UpdateHealth(health, maxHealth);
+    }
     public void TakeDamage(float damage, Vector3 knockbackDirection)
     {
         float processedDamage = damage - (resist * damage);

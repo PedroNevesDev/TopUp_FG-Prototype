@@ -137,7 +137,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 30b3fa4989747e746af51c7e8b5d1c3a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  returnTimer: 3
+  returnTimer: 2
   spellSO: {fileID: 11400000, guid: a97d968a7cf734045971ea7a76c687a4, type: 2}
 --- !u!65 &207658641043104529
 BoxCollider:

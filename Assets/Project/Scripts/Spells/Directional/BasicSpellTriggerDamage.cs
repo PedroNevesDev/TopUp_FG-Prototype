@@ -3,7 +3,8 @@ using UnityEngine;
 
 public class BasicSpellTriggerDamage : MonoBehaviour
 {
-    void Start()
+
+    void OnEnable()
     {
         StartCoroutine(WaitToReturn());
     }
@@ -19,7 +20,8 @@ public class BasicSpellTriggerDamage : MonoBehaviour
     {
         if(!other.CompareTag("Player")&&other.TryGetComponent(out Damageable component))
         {
-            component.TakeDamage(spellSO.ProccessedValue(),Vector3.up);
+            component.TakeDamage(spellSO.ProccessedValue(),Vector3.up,0.1f);
+            spellSO.CheckIfShouldApplyEffect(component);
         }
     }
 }

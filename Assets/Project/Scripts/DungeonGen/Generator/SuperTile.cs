@@ -72,6 +72,10 @@ public void PlaceDecor(GameObject prefab, DecorType decorType)
 
 
     GameObject obj = ObjectPool.Instance.GetObject(prefab);
+    if(obj.TryGetComponent(out Enemy enemy))
+    {
+        DungeonGenerator.Instance.AddEnemy(enemy);
+    }
     if(decorType == DecorType.Wall)
     obj.transform.forward = randomObj.transform.parent.right;
 

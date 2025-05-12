@@ -13,29 +13,45 @@ protected override void Cast(Vector3 spawnPoint, Vector3 direction)
     Debug.Log("Casting " + spell.spellName);
 
     int count = spell.GetCasts();
-    float angle = spell.multicastMaxAngle;
+    Vector3 flatDirection = direction;
 
-        Vector3 flatDirection = direction;
+    if (spell.isGrounded)
+    {
+        flatDirection.y = 0f;
+        flatDirection.Normalize();
+    }
 
-        if (spell.isGrounded)
+    if (spell.useAngle)
+    {
+        // Spread evenly around 360°
+        for (int i = 0; i < count; i++)
         {
-            // Flatten the direction to the horizontal plane
-            flatDirection.y = 0f;
-            flatDirection.Normalize();
+            float currentAngle = 360f * i / count;
+            Quaternion rotation = Quaternion.AngleAxis(currentAngle, Vector3.up);
+            Vector3 rotatedDir = rotation * flatDirection;
+
+            ObjectPool.Instance.GetObject(spell.spellPrefab, spawnPoint, Quaternion.LookRotation(rotatedDir));
         }
+    }
+    else
+    {
+        // Dynamic small spread around forward direction
+        float baseAnglePerCast = 9f; // small angle base
+        float anglePerCast = Mathf.Max(1f, baseAnglePerCast - count * 0.2f); // reduce angle with more casts
+        float totalAngle = anglePerCast * (count - 1);
 
         for (int i = 0; i < count; i++)
         {
-            float spreadStep = (count > 1) ? angle / (count - 1) : 0f;
-            float currentAngle = -angle / 2f + spreadStep * i;
+            float currentAngle = -totalAngle / 2f + anglePerCast * i;
+            Quaternion rotation = Quaternion.AngleAxis(currentAngle, Vector3.up);
+            Vector3 rotatedDir = rotation * flatDirection;
 
-            Quaternion rotationOffset = Quaternion.AngleAxis(currentAngle, Vector3.up); // horizontal only
-            Vector3 rotatedDirection = rotationOffset * flatDirection;
-
-            // No need to offset again if you've already done it outside
-            ObjectPool.Instance.GetObject(spell.spellPrefab, spawnPoint, Quaternion.LookRotation(rotatedDirection));
+            ObjectPool.Instance.GetObject(spell.spellPrefab, spawnPoint, Quaternion.LookRotation(rotatedDir));
         }
+    }
 
     StartCooldown();
 }
+
+
 }

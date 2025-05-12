@@ -590,13 +590,13 @@ MonoBehaviour:
     max: 2
   attackCollision: {fileID: 7227974040662706800}
   damageArea: {fileID: 1043202911866749714}
-  attackpreptime: 0
+  attackpreptime: 0.2
   target: {fileID: 0}
   maskTarget: {fileID: 6435098127564212906}
   objectToSpawn: {fileID: 1307802998799835269, guid: d93185f5650cd4a828a0e2faff34a0cb, type: 3}
   skySpawnOffset: {x: 0, y: 20, z: 0}
   moveDuration: 2
-  detectionRadius: 10
+  detectionRadius: 20
   attackRange: 2
   moveSpeed: 3
   rotationSpeed: 5
@@ -785,7 +785,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &9029069996061496182
 Transform:
   m_ObjectHideFlags: 0

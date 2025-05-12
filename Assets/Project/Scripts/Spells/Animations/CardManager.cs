@@ -3,6 +3,7 @@ using DG.Tweening;
 using System.Collections;
 using UnityEngine.Rendering.Universal;
 using System.Linq;
+using System.Collections.Generic;
 public class CardManager : Singleton<CardManager>
 {
     [Header("Card References")]
@@ -39,6 +40,7 @@ public class CardManager : Singleton<CardManager>
     [Header("Selection State")]
     public RectTransform selectionCenter;
     public float selectionSpacing = 110f;
+    List<SpellSO> myCards = new List<SpellSO>();
 
     bool isSelecting = false;
 
@@ -48,17 +50,27 @@ public class CardManager : Singleton<CardManager>
     }
     public void AddCard(SpellSO spellData)
     {
+        if(myCards.Contains(spellData))
+        {
+            spellData.LevelUp();
+            return;
+        }
         Card card = Instantiate(cardPrefab,transform);
         card.GetComponent<Spell>().spell = spellData;
-        spellData.Initialize(card);
+        spellData.Initialize(card,true);
+        myCards.Add(spellData);
+    }
 
+    public void RefreshCard()
+    {
+        myCards.ForEach(c=>c.UpdateCard());
     }
 
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.Space))
             ToggleCardView();
-        if(Input.GetKeyDown(KeyCode.Escape))
+        if(Input.GetKeyDown(KeyCode.I))
             ToggleCardSelection();
 
         if(cards.Length!=transform.childCount)

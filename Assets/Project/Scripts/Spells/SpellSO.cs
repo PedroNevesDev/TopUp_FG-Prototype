@@ -1,28 +1,29 @@
 using System.Collections.Generic;
-using System.Threading;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "Spell", menuName = "Scriptable Objects/NewSpell")]
 public class SpellSO : ScriptableObject
 {
+    [Header("Core")]
     public List<SpellAttributes> attributes = new List<SpellAttributes>();
-
     public SpellCategory spellCategory;
-
     public AbilityType abilityType;
+
+    public EffectType effectType;
     public string spellName;
     public string spellDescription;
     public Sprite spellIcon;
-    public float cooldownDuration = 5f;  // Example cooldown time in seconds
+    public float cooldownDuration = 5f;
 
     [Header("Object")]
-    public GameObject spellPrefab; // Prefab of the projectile
+    public GameObject spellPrefab;
     public Vector3 spawnOffset;
 
     [Header("Projectile")]
-
     public int multicastCount = 1;
     public int multicastMaxAngle = 90;
+
+    public bool useAngle;
 
     [Header("Duration")]
     public float spellDuration = 0f;
@@ -30,50 +31,108 @@ public class SpellSO : ScriptableObject
 
     [Header("Chain")]
     public int bounces = 0;
-
     public bool isGrounded;
 
+    public float effectorValue = 0.3f;
 
     public float baseValue = 1;
     public float multiplierPerLevel = 0.4f;
     public int abilityLevel = 1;
 
+    // 🔒 Private default values for reset
+    private int defaultMulticastCount;
+    private int defaultBounces;
+    private int defaultAbilityLevel;
+    private float defaultSpellDuration;
+    private float defaultCooldownDuration;
+    private float defaultBaseValue;
+    private float defaultMultiplierPerLevel;
+
+
     Card myCard;
     GlobalStatsManager gsm;
-    public void Initialize(Card myCardInstance)
+
+    // Called when SO is loaded or recompiled
+    private void OnEnable()
     {
-        myCard = myCardInstance;
+        CacheDefaults();
+    }
+
+    public void CheckIfShouldApplyEffect(Damageable damageable)
+    {
+        damageable.ApplyEffect(effectType,effectorValue,spellDuration);
+    }
+
+    private void CacheDefaults()
+    {
+        defaultMulticastCount = multicastCount;
+        defaultBounces = bounces;
+        defaultAbilityLevel = abilityLevel;
+        defaultSpellDuration = spellDuration;
+        defaultCooldownDuration = cooldownDuration;
+        defaultBaseValue = baseValue;
+        defaultMultiplierPerLevel = multiplierPerLevel;
+    }
+
+    public void ResetToDefaults()
+    {
+        multicastCount = defaultMulticastCount;
+        bounces = defaultBounces;
+        abilityLevel = defaultAbilityLevel;
+        spellDuration = defaultSpellDuration;
+        cooldownDuration = defaultCooldownDuration;
+        baseValue = defaultBaseValue;
+        multiplierPerLevel = defaultMultiplierPerLevel;
+        myCard = null;
+        //UpdateCard();
+    }
+
+    public void Initialize(Card myCardInstance, bool changeMyCard)
+    {
+        if (changeMyCard)
+            myCard = myCardInstance;
+
         gsm = GlobalStatsManager.Instance;
         UpdateCard();
     }
+
     public void Clear()
     {
         myCard = null;
     }
+
     public void UpdateCard()
     {
         myCard.Setup(this);
     }
-    public float ProccessedValue()
-    {
-        if(gsm==null)
+
+public float ProccessedValue()
+{
+    if (gsm == null)
         gsm = GlobalStatsManager.Instance;
-        
-        float efficiency = 1;
-        switch(spellCategory)
-        {
-            case SpellCategory.Power:
-            efficiency = gsm.offensiveEfficiency;
-            break;
-            case SpellCategory.Protective:
-            efficiency = gsm.protectiveEfficiency;
-            break;
-            case SpellCategory.Dexterity:
-            efficiency = gsm.dexterityEfficiency;
-            break;
-        }
-        return ((multiplierPerLevel*abilityLevel)*baseValue) * efficiency * gsm.overallEffectiveness ;
-    }
+
+    float bonuses = 1 + gsm.overallEffectiveness;
+
+    // Add category-specific efficiency
+    bonuses += spellCategory switch
+    {
+        SpellCategory.Power => gsm.offensiveEfficiency,
+        SpellCategory.Protective => gsm.protectiveEfficiency,
+        SpellCategory.Dexterity => gsm.dexterityEfficiency,
+        _ => 0f
+    };
+
+    // Elemental bonuses
+    if (attributes.Contains(SpellAttributes.Fire))
+        bonuses += gsm.fireDamage;
+    if (attributes.Contains(SpellAttributes.Ice))
+        bonuses += gsm.iceDamage;
+
+    // Final value calculation
+    return baseValue * (1 + multiplierPerLevel * abilityLevel) * bonuses;
+}
+
+
     public int GetBounces()
     {
         return bounces + gsm.additionalBounces;
@@ -81,27 +140,26 @@ public class SpellSO : ScriptableObject
 
     public int GetCasts()
     {
-        return multicastCount + gsm.additionalBounces;
+        return multicastCount + gsm.additionalProjectiles;
     }
-
-    public void LevelUp(Card card)
+    public float GetCooldown()
     {
-        if(card.SpellSO == this)
-        {
-            Destroy(card.gameObject);
-            abilityLevel++;
-            UpdateCard();
-        }
+        return cooldownDuration - cooldownDuration*gsm.cooldownReduction;
+    }
+    public void LevelUp()
+    {
+        abilityLevel++;
+        UpdateCard();
     }
 }
+
 public enum SpellAttributes
 {
-    Protective,
     Fire,
     Ice,
     Multicast,
     AOE,
-    Chain,
+    Bounce,
     Duration,
 }
 

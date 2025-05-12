@@ -1,18 +1,33 @@
 using UnityEngine;
-using TMPro; // Make sure you're using TextMeshPro
+using TMPro;
 
 public class DamageNumber : MonoBehaviour
 {
-    public float floatSpeed = 1f;         // How fast it moves up
-    public float fadeDuration = 1f;       // How long it takes to fade out
-    public  TextMeshProUGUI text;         // TMP text component
+    public float floatSpeed = 1f;
+    public float fadeDuration = 1f;
+    public TextMeshProUGUI text;
+
     private Color startColor;
+    private Vector3 originalPosition;
+
+    void Awake()
+    {
+        startColor = text.color;
+    }
 
     void OnEnable()
     {
-        startColor = text.color;
+        StopAllCoroutines();
+        text.color = startColor;
+        originalPosition = transform.position;
+        transform.rotation = Quaternion.identity;
+
+         if (Camera.main != null)
+            transform.rotation = Quaternion.LookRotation(transform.position - Camera.main.transform.position);
+
         StartCoroutine(FadeAndRise());
     }
+
     public void Setup(string str)
     {
         text.text = str;
@@ -22,22 +37,18 @@ public class DamageNumber : MonoBehaviour
     private System.Collections.IEnumerator FadeAndRise()
     {
         float elapsed = 0f;
-        Vector3 startPos = transform.position;
 
         while (elapsed < fadeDuration)
         {
             elapsed += Time.deltaTime;
             float percent = elapsed / fadeDuration;
 
-            // Move upward
-            transform.position = startPos + Vector3.up * floatSpeed * percent;
-
-            // Fade out
+            transform.position = originalPosition + Vector3.up * floatSpeed * percent;
             text.color = new Color(startColor.r, startColor.g, startColor.b, Mathf.Lerp(startColor.a, 0, percent));
 
             yield return null;
         }
 
-        ObjectPool.Instance.ReturnObject(gameObject); 
+        ObjectPool.Instance.ReturnObject(gameObject);
     }
 }

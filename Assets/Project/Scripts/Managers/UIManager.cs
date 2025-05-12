@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine;
+using System.Collections.Generic;
 
 public class UIManager : Singleton<UIManager>
 {
@@ -25,17 +26,49 @@ public class UIManager : Singleton<UIManager>
     private Coroutine damageCoroutine;
     private Coroutine expCoroutine;
 
-    private UIDeathPanelController deathPannel;
+    int floorNumber = 1;
+
+    private UITransitionPanelController pannel;
     private LevelManager levelManager;
+
+    public List<string> dungeonTexts = new List<string>();
+
+    public List<string> deathTexts = new List<string>();
     public void ShowPlayerDeathUI()
     {
-        
-        if(deathPannel)
+        List<string> newList = new List<string>
+        {
+            deathTexts[Random.Range(0, deathTexts.Count)]
+        };
+
+        if(pannel)
         {
             levelManager.TogglePause(true);
-            deathPannel.ShowDeathPanel();     
+            pannel.ShowTransition(newList,levelManager.Restart);
         }
+    }
 
+    public void ShowDungeonMessage()
+    {
+        floorNumber++;
+        string floorString ="Floor "+ floorNumber;
+        List<string> newList = new List<string>
+        {
+            dungeonTexts[Random.Range(0, dungeonTexts.Count)],
+            floorString,
+        };
+        
+        if(pannel)
+        {
+            levelManager.TogglePause(true);
+            pannel.ShowTransition(newList,DungeonGenerator.Instance.Regenerate);
+        }
+    }
+
+    public void ResetTransition()
+    {
+
+        StartCoroutine(pannel.FadeFromBlack());
     }
 
     public void Unpause()
@@ -44,7 +77,7 @@ public class UIManager : Singleton<UIManager>
     }
     private void Start()
     {
-        deathPannel = GetComponent<UIDeathPanelController>();
+        pannel = GetComponent<UITransitionPanelController>();
         levelManager = LevelManager.Instance;
         // Initialize fills
         if (hpFill) hpFill.fillAmount = 1f;
@@ -149,16 +182,39 @@ public class UIManager : Singleton<UIManager>
     public float levelUpScaleMultiplier = 1.5f;
     private Coroutine levelAnimCoroutine;
 
-    public void UpdateLevel(int level)
+private Queue<int> levelUpQueue = new Queue<int>();
+private bool isAnimatingLevel = false;
+
+public void UpdateLevel(int level)
+{
+    // Prevent duplicates and avoid level-ups from queuing too quickly
+    if (isAnimatingLevel) return;
+
+    if (levelUpQueue.Count == 0 || levelUpQueue.Peek() != level)
+        levelUpQueue.Enqueue(level);
+
+    if (!isAnimatingLevel)
+        StartCoroutine(ProcessLevelQueue());
+}
+
+private IEnumerator ProcessLevelQueue()
+{
+    isAnimatingLevel = true;
+
+    while (levelUpQueue.Count > 0)
     {
-        // Stop any ongoing level animation
-        if (levelAnimCoroutine != null)
-            StopCoroutine(levelAnimCoroutine);
-            
-        // Start the level up animation
-        levelAnimCoroutine = StartCoroutine(AnimateLevelChange(level));
+        int currentLevel = levelUpQueue.Dequeue();
+        yield return AnimateLevelChange(currentLevel);
+
+        // Add a small delay between level-ups (adjust the time as needed)
+        yield return new WaitForSeconds(0.5f); // 0.5 seconds delay
     }
-    
+
+    isAnimatingLevel = false;
+}
+
+
+
     private IEnumerator AnimateLevelChange(int newLevel)
     {
         // Cache the original values
@@ -203,6 +259,8 @@ public class UIManager : Singleton<UIManager>
         // Ensure we're back to original values when done
         levelText.transform.localScale = originalScale;
         levelText.color = originalColor;
+
+        GlobalStatsManager.Instance.GeneratePicks();
     }
     
     // Reset values if needed (for example when player dies or game restarts)

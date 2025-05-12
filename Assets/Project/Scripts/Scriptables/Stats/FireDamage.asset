@@ -12,12 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 25d6e83551cfde1488a3ff4d257a7512, type: 3}
   m_Name: FireDamage
   m_EditorClassIdentifier: 
-  displayMode: 0
+  displayMode: 1
   type: 0
   statIcon: {fileID: 21300000, guid: b345545843990394699761aa5d848009, type: 3}
-  minValue: 0
-  maxValue: 10
+  minValue: 0.05
+  maxValue: 0.15
   chanceOfDropping: 1
-  currentValue: 0
-  format: +{0}% Fire Damage
-  smallDescription: Description
+  currentValue: 2.3401344
+  format: +{0} Fire Damage
+  smallDescription: Improves fire damage

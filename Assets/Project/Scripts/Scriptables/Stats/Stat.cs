@@ -22,24 +22,35 @@ public class Stat : ScriptableObject
     public string smallDescription = "Description";
     public void RollValue()
     {
-        currentValue = Random.Range(minValue, maxValue);
-    }
-
-    public string GetFormatted()
-    {
-        string val;
-
-        if (displayMode == StatDisplayMode.Percentage)
+        if(displayMode==StatDisplayMode.Flat)
         {
-            val = (currentValue * 100f).ToString("0.#") + "%";
+            currentValue = Random.Range((int)minValue, (int)maxValue+1);  
         }
         else
         {
-            val = currentValue % 1 == 0 ? ((int)currentValue).ToString() : currentValue.ToString("0.##");
+            currentValue = Random.Range(minValue, maxValue);            
         }
 
-        return string.Format(format, val, type.ToString());
     }
+
+public string GetFormatted()
+{
+    string val;
+
+    if (displayMode == StatDisplayMode.Percentage)
+    {
+        // Display as whole percentage (no decimals)
+        val = ((int)(currentValue * 100f)).ToString() + "%"; // Cast to int to avoid decimals
+    }
+    else
+    {
+        // Format value to 4 decimals max
+        val = currentValue % 1 == 0 ? ((int)currentValue).ToString() : currentValue.ToString("0.####");
+    }
+
+    return string.Format(format, val, type.ToString());
+}
+
 
 }
 public enum StatDisplayMode
@@ -50,15 +61,16 @@ public enum StatDisplayMode
 
 public enum StatType
 {
-    FireDamage,
-    IceDamage,
+    Fire,
+    Ice,
     Bounces,
     Multicast,
-    ShopDiscount,
-    AttackSpeed,
-    CooldownReduction,
+    Shop_Discount,
+    Attack_Speed,
+    Cooldown_Reduction,
     Power,
     Dexterity,
     Protective,
     Health,
+    Melee_Damage,
 }

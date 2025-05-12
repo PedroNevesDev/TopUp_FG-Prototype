@@ -64,19 +64,35 @@ void CheckForEnemies()
 }
 
 
-public void AddEXP(float expAmmount)
+public void AddEXP(float expAmount)
 {
-    currentExp += expAmmount;
-    if(currentExp>CalculateExpNeeded())
+    currentExp += expAmount;
+    
+    // Check if we need to level up
+    while (currentExp >= CalculateExpNeeded())
     {
-        float extraExp = currentExp - expPerLevel*level;
+        // Calculate extra experience after leveling up
+        float extraExp = currentExp - CalculateExpNeeded();
+        
+        // Increase level
         level++;
+        
+        // Update level UI
         uiManager.UpdateLevel(level);
+        
+        // Reset current experience to 0 and carry over the extra experience to the next level
+        currentExp = 0f;
+        
+        // Recursively add the extra experience to the next level
         AddEXP(extraExp);
         return;
     }
+
+    // Update experience UI for the current level
     uiManager.UpdateExp(currentExp, CalculateExpNeeded());
 }
+
+
 
 void Movement()
 {

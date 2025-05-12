@@ -5,7 +5,6 @@ using UnityEngine;
 public class FireballProjectile : MonoBehaviour
 {
     public SpellSO spell;
-    public int maxBounceCount = 3; // Maximum number of bounces before returning to pool
     public float bounceLossMultiplier = 0.8f; // Loss of velocity per bounce
     public float throwForce = 15f; // Initial throw force
     public float additionalGravity = 20f; // Additional gravity applied to the fireball
@@ -39,35 +38,52 @@ public class FireballProjectile : MonoBehaviour
         rb.AddForce(transform.forward * throwForce, ForceMode.Impulse);
     }
 
-    private void OnCollisionEnter(Collision collision)
+private void OnCollisionEnter(Collision collision)
+{
+    if (collision.gameObject == gameObject) return;
+
+    Vector3 contactNormal = collision.contacts[0].normal;
+
+    // Reflect velocity
+    Vector3 reflectedVelocity = Vector3.Reflect(rb.linearVelocity, contactNormal);
+    reflectedVelocity = ApplyBounceAngle(reflectedVelocity, contactNormal);
+
+    // Ensure minimum velocity
+    float minVelocity = 3f;
+    if (reflectedVelocity.magnitude < minVelocity)
     {
-        Vector3 contactNormal = collision.contacts[0].normal;
-
-        // Reflect velocity normally
-        Vector3 reflectedVelocity = Vector3.Reflect(rb.linearVelocity, contactNormal);
-        reflectedVelocity = ApplyBounceAngle(reflectedVelocity, contactNormal);
-
-        // Ensure it never falls below a minimum threshold
-        float minVelocity = 3f; // Adjust as needed
-        if (reflectedVelocity.magnitude < minVelocity)
-        {
-            reflectedVelocity = reflectedVelocity.normalized * minVelocity;
-        }
-
-        rb.linearVelocity = reflectedVelocity * bounceLossMultiplier;
-        currentBounceCount--;
-        // Decrease bounce count or return to pool
-        if (currentBounceCount < 0)
-        {
-            ReturnToPool();
-        }
+        reflectedVelocity = reflectedVelocity.normalized * minVelocity;
     }
+
+    rb.linearVelocity = reflectedVelocity * bounceLossMultiplier;
+
+    // Only reduce bounce count for upward-ish hits
+    if (Vector3.Dot(contactNormal, Vector3.up) > 0.5f)
+    {
+        currentBounceCount--;
+    }
+
+    // Pooled collision effect, aligned up with the normal
+    if (collisionEffect != null)
+    {
+        Quaternion rotation = Quaternion.LookRotation(Vector3.forward, contactNormal); // Forward stays fixed, up becomes normal
+        ObjectPool.Instance.GetObject(collisionEffect, collision.contacts[0].point, rotation);
+    }
+
+    // Return to pool if out of bounces
+    if (currentBounceCount < 0)
+    {
+        ReturnToPool();
+    }
+}
+
+
 
     private void OnTriggerEnter(Collider other)
     {
         if(!other.CompareTag("Player")&&other.TryGetComponent(out Damageable component))
         {
-            component.TakeDamage(spell.ProccessedValue(),component.transform.position-transform.position *0.1f);
+            component.TakeDamage(spell.ProccessedValue(),component.transform.position-transform.position *0.1f,0.1f);
             ReturnToPool();
             return;
         }

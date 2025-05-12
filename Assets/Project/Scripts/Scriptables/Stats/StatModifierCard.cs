@@ -9,8 +9,11 @@ public class StatModifierCard : MonoBehaviour
 
     public Image statIcon;
 
+    public Stat myStat;
+
     public void Setup(Stat stat)
     {
+        myStat = stat;
         title.text = stat.GetFormatted();
         description.text = stat.smallDescription;
         statIcon.sprite = stat.statIcon;

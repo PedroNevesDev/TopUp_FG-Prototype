@@ -4,16 +4,15 @@ public class DamageArea : MonoBehaviour
 {
     public Transform who;
     public float damage;
-
     public Collider myCollision;
 
-    void OnTriggerEnter(Collider other)
+    private void OnTriggerEnter(Collider other)
     {
-        if(other.TryGetComponent(out PlayerDamageable component))
+        if (myCollision.enabled && other.TryGetComponent(out PlayerDamageable component))
         {
+            component.TakeDamage(damage, who.position - component.transform.position);
             myCollision.enabled = false;
             gameObject.SetActive(false);
-            component.TakeDamage(damage,who.position-component.transform.position);
         }
     }
 }

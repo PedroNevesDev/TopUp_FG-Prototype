@@ -3,15 +3,20 @@ using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 
+
 public class Damageable : MonoBehaviour
 {
     [Header("Color Change")]
     public Color targetColor;
     Color initialColor;
+
+    protected float slow = 0;
+    protected float controlableResist = 0;
     public MeshRenderer meshRenderer;
     [Header("Health Related")]
     public float health;
-    public float maxHealth = 100f;
+    public float baseHealth = 70f; 
+    public float maxHealth;
     public Image healthBar;
     public Image damageBar;
 
@@ -54,24 +59,58 @@ public class Damageable : MonoBehaviour
         objectPool = ObjectPool.Instance;
         globalStatsManager = GlobalStatsManager.Instance;
         shakeEffect = GetComponentInChildren<ShakeEffect>();
+    }
+
+    public void ApplyEffect(EffectType effectType,float value, float duration)
+    {
+        switch(effectType)
+        {
+            case EffectType.Burn:
+            break;
+            case EffectType.Frost:
+            StopCoroutine(Frost(value,duration));
+            StartCoroutine(Frost(value,duration));
+            break;
+            case EffectType.Eletracute:
+            break;
+        }
+    }
+
+    IEnumerator Frost(float slowValue,float duration)
+    {
+        slow = slowValue;
+        DamageNumber dmg = objectPool.GetObject(globalStatsManager.damageNumberPrefab,transform.position+new Vector3(0,3,0),Quaternion.identity).GetComponent<DamageNumber>();
+        dmg.Setup("<color=blue>FREEZE</color>");
+        yield return new WaitForSeconds(duration);
+        slow = 0;
+    }
+
+    
+    protected virtual void OnEnable()
+    {
+        if(globalStatsManager==null)globalStatsManager = GlobalStatsManager.Instance;
+        maxHealth = baseHealth+globalStatsManager.GetHealth();
         if (canvasGroup == null)
         {
             Debug.LogError("Missing CanvasGroup on health bar parent.");
         }
-        UpdateBarInstant();
         canvasGroup.alpha = 0; // Start invisible
+        health = baseHealth + globalStatsManager.enemyHealthPerLevel*globalStatsManager.floor;
+        maxHealth = health;
+        UpdateBarInstant();
     }
 
-    public void TakeDamage(float damage, Vector3 dirKnockback)
+    public void TakeDamage(float damage, Vector3 dirKnockback, float knockbackForce)
     {
-        float proccessedDamage = damage - (globalStatsManager.enemyResist*damage);
+        float proccessedDamage = (damage - (globalStatsManager.GetResist()*damage))*controlableResist;
+
         health -= proccessedDamage;
-        DamageNumber dmg= objectPool.GetObject(globalStatsManager.damageNumberPrefab,transform.position+new Vector3(0,2,0),Quaternion.identity).GetComponent<DamageNumber>();
+        DamageNumber dmg = objectPool.GetObject(globalStatsManager.damageNumberPrefab,transform.position+new Vector3(0,3,0),Quaternion.identity).GetComponent<DamageNumber>();
         cameraManager.ShakeActiveCamera(0.5f,dirKnockback);
-        dmg.Setup(proccessedDamage.ToString());
+        dmg.Setup(proccessedDamage.ToString("F1"));
         if(isAffectedByKnockback)
         {
-            rb.AddForce(dirKnockback.normalized*4,ForceMode.Impulse);
+            rb.AddForce(dirKnockback.normalized*knockbackForce,ForceMode.Impulse);
         }
         CheckHealth();
         UpdateBar();
@@ -81,8 +120,12 @@ public class Damageable : MonoBehaviour
         }
         if(health==0)
         {
-            drops.ForEach(d=>d.Drop(transform.position));
+            drops.ForEach(d=>d.Drop(transform.position+new Vector3(0,0.5f,0)));
             StopAllCoroutines();
+            if(this is Enemy)
+            {
+                DungeonGenerator.Instance.RemoveEnemy(this as Enemy);
+            }
             objectPool.ReturnObject(gameObject);
         }
     }
@@ -149,4 +192,12 @@ public class Damageable : MonoBehaviour
 
         canvasGroup.alpha = targetAlpha;
     }
+}
+
+public enum EffectType
+{
+    None,
+    Burn,
+    Frost,
+    Eletracute
 }

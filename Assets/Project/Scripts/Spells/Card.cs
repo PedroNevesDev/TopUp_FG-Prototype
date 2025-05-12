@@ -7,6 +7,7 @@ public class Card : MonoBehaviour
     [Header("Card References")] 
     public TextMeshProUGUI cardTitle;
     public TextMeshProUGUI cardDescription;
+    public TextMeshProUGUI cardTags;
     public Image spellImage;
     public Image darkning;
     public Image cdImage;
@@ -16,7 +17,7 @@ public class Card : MonoBehaviour
 
     float currentCD;
 
-    private SpellSO spellSO;
+    public SpellSO spellSO;
     public bool onCooldown = false;
 
     public bool onDuration = false;
@@ -30,9 +31,15 @@ public class Card : MonoBehaviour
         SetText(spellData.cooldownDuration);
         spellSO = spellData;
         cardTitle.text = spellData.spellName;
-        cardDescription.text = string.Format(spellData.spellDescription,spellData.ProccessedValue());
+        cardDescription.text = string.Format(spellData.spellDescription, spellData.ProccessedValue().ToString("0"));
         spellImage.sprite = spellData.spellIcon;
         levelText.text = spellData.abilityLevel.ToString();
+
+        string attributes = "";
+
+        spellData.attributes.ForEach(a=> attributes+=", "+a.ToString());
+        cardTags.text = spellData.spellCategory.ToString() + attributes;
+
     }
     void FixedUpdate()
     {

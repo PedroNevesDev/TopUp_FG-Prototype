@@ -12,22 +12,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7db659b895b60411cbcb7d4542c622a3, type: 3}
   m_Name: Fireball
   m_EditorClassIdentifier: 
-  attributes: 
+  attributes: 000000000400000002000000
   spellCategory: 0
   abilityType: 0
+  effectType: 1
   spellName: Fireball
   spellDescription: Throws a fireball that bounces 3 times dealing <color=red>{0}
     FIRE DAMAGE</color> on-hit.
   spellIcon: {fileID: 21300000, guid: 790543d0434624eabb5dbc29bf63e20b, type: 3}
-  cooldownDuration: 0.3
+  cooldownDuration: 2.5
   spellPrefab: {fileID: 4457390620143002123, guid: 356db54ccefaa489e979e9626417d9a1, type: 3}
   spawnOffset: {x: 0, y: 0, z: 0}
   multicastCount: 1
-  multicastMaxAngle: 0
+  multicastMaxAngle: 360
+  useAngle: 0
   spellDuration: 0
   canBeCanceled: 0
   bounces: 3
   isGrounded: 0
-  baseValue: 25
-  multiplierPerLevel: 1.1
+  effectorValue: 0.3
+  baseValue: 14
+  multiplierPerLevel: 0.3
   abilityLevel: 1

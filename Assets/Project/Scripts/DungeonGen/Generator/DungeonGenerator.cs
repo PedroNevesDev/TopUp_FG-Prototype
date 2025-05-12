@@ -1,6 +1,7 @@
 using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
+using System;
+using System.Collections;
 
 public class DungeonGenerator : Singleton<DungeonGenerator>
 {
@@ -13,9 +14,6 @@ public class DungeonGenerator : Singleton<DungeonGenerator>
 
     [Header("Tile Prefab")]
     [SerializeField] SuperTile superTilePrefab;
-
-    [Header("Texture Floor Data")]
-    [SerializeField] List<FloorData> floors;
 
     [Header("Special Object Prefabs")]
     [SerializeField] GameObject enemyPrefab;
@@ -44,53 +42,90 @@ public class DungeonGenerator : Singleton<DungeonGenerator>
 
     public Vector3 Scale { get => scale; set => scale = value; }
 
+    public List<Enemy> listOfEnemiesWithin = new List<Enemy>();
+
+    public List<MapData> mapDatas = new List<MapData>();
+    private MapData lastMap;
+
     void Start()
     {
         if (generateOnStart)
             GenerateDungeonImmediate();
     }
 
+    public void Regenerate()
+    {
+        LevelManager.Instance.TogglePause(false);
+        GenerateDungeonImmediate(UIManager.Instance.ResetTransition);
+    }
+
+    public void AddEnemy(Enemy enemy)
+    {
+        listOfEnemiesWithin.Add(enemy);
+    }
+
+    public void RemoveEnemy(Enemy enemy)
+    {
+        listOfEnemiesWithin.Remove(enemy);
+        if (listOfEnemiesWithin.Count <= 0)
+        {
+            StartCoroutine(WaitAwhile());
+        }
+    }
+
+    IEnumerator WaitAwhile()
+    {
+        yield return new WaitForSeconds(1.5f);
+        UIManager.Instance.ShowDungeonMessage();
+    }
+    MapData GetRandomMap()
+    {
+        return mapDatas[UnityEngine.Random.Range(0,mapDatas.Count)];
+    }
     #region Dungeon Generation
 
-    public void GenerateDungeonImmediate()
+   public void GenerateDungeonImmediate(Action action = null)
+{
+    if (isGenerating) return;
+    isGenerating = true;
+
+    MapData newMap = GetRandomMap();
+    while (newMap == lastMap)
+        newMap = GetRandomMap();
+
+    ClearDungeon();
+    grid.Clear();
+    spawnedTiles.Clear();
+
+    foreach (var floor in newMap.floors)
     {
-        if (isGenerating) return;
-        isGenerating = true;
-
-        ClearDungeon();
-        grid.Clear();
-        spawnedTiles.Clear();
-
         int baseY = 0;
-        List<Vector3Int> tilePositions = new List<Vector3Int>();
+        List<Vector3Int> tilePositions = new();
         Dictionary<Vector3Int, Color> specialPixels = new();
         Dictionary<Vector3Int, FloorData> decorSources = new();
 
-        foreach (var floor in floors)
+        for (int r = 0; r < floor.repeatCount; r++)
         {
             if (floor.layoutTexture == null) continue;
 
-            for (int r = 0; r < floor.repeatCount; r++)
+            for (int z = 0; z < floor.layoutTexture.height; z++)
             {
-                for (int z = 0; z < floor.layoutTexture.height; z++)
+                for (int x = 0; x < floor.layoutTexture.width; x++)
                 {
-                    for (int x = 0; x < floor.layoutTexture.width; x++)
-                    {
-                        Color pixel = floor.layoutTexture.GetPixel(x, z);
-                        if (pixel.grayscale <= 0.5f) continue;
+                    Color pixel = floor.layoutTexture.GetPixel(x, z);
+                    if (pixel.grayscale <= 0.5f) continue;
 
-                        Vector3Int pos = new Vector3Int(x * tileDistance, baseY, z * tileDistance);
-                        tilePositions.Add(pos);
+                    Vector3Int pos = new(x * tileDistance, baseY, z * tileDistance);
+                    tilePositions.Add(pos);
 
-                        if (IsSpecialColor(pixel))
-                            specialPixels[pos] = pixel;
+                    if (IsSpecialColor(pixel))
+                        specialPixels[pos] = pixel;
 
-                        if (HasDecorAt(floor, x, z))
-                            decorSources[pos] = floor;
-                    }
+                    if (HasDecorAt(floor, x, z))
+                        decorSources[pos] = floor;
                 }
-                baseY += tileDistance;
             }
+            baseY += tileDistance;
         }
 
         foreach (var pos in tilePositions)
@@ -105,24 +140,27 @@ public class DungeonGenerator : Singleton<DungeonGenerator>
             if (decorSources.TryGetValue(pos, out var floorData))
                 PlaceDecorations(tile, floorData, pos);
         }
-
-        foreach (var kvp in grid)
-        {
-            foreach (var dir in GetAllPossibleDirections())
-            {
-                var neighborPos = kvp.Key + dir * tileDistance;
-                if (grid.TryGetValue(neighborPos, out var neighbor))
-                    kvp.Value.Connect(neighbor, dir);
-            }
-        }
-
-        if (generateDarkningTiles && theDarkningTilePrefab != null)
-            FillWithDarkningTiles();
-        spawnedTiles.ForEach(tile =>tile.RandomlyReplaceWalls());
-        isGenerating = false;
     }
 
-    void FillWithDarkningTiles()
+    foreach (var kvp in grid)
+    {
+        foreach (var dir in GetAllPossibleDirections())
+        {
+            var neighborPos = kvp.Key + dir * tileDistance;
+            if (grid.TryGetValue(neighborPos, out var neighbor))
+                kvp.Value.Connect(neighbor, dir);
+        }
+    }
+
+    if (generateDarkningTiles && theDarkningTilePrefab != null)
+        FillWithDarkningTiles();
+
+    spawnedTiles.ForEach(tile => tile.RandomlyReplaceWalls());
+    isGenerating = false;
+    action?.Invoke();
+}
+
+   void FillWithDarkningTiles()
     {
         int minX = int.MaxValue, maxX = int.MinValue;
         int minZ = int.MaxValue, maxZ = int.MinValue;
@@ -159,21 +197,46 @@ public class DungeonGenerator : Singleton<DungeonGenerator>
             }
         }
     }
-
+        bool IsWithinDarkningRange(Vector3Int pos, HashSet<Vector3Int> corePositions)
+    {
+        for (int r = 1; r <= darkningRange; r++)
+        {
+            for (int dx = -r; dx <= r; dx++)
+            {
+                for (int dz = -r; dz <= r; dz++)
+                {
+                    if (Mathf.Abs(dx) != r && Mathf.Abs(dz) != r) continue;
+                    if (corePositions.Contains(pos + new Vector3Int(dx, 0, dz) * tileDistance))
+                        return true;
+                }
+            }
+        }
+        return false;
+    }
     #endregion
 
     #region Helpers
 
-    void HandleSpecial(Color pixel, Vector3Int pos, SuperTile tile)
+void HandleSpecial(Color pixel, Vector3Int pos, SuperTile tile)
+{
+    Debug.Log($"[Special Color Detected] at {pos}: r={pixel.r:F2}, g={pixel.g:F2}, b={pixel.b:F2}");
+
+    if (Approximately(pixel, Color.red))
+        SpawnSpecial(enemyPrefab, pos);
+    else if (Approximately(pixel, Color.cyan))
     {
-        if (Approximately(pixel, Color.red)) SpawnSpecial(enemyPrefab, pos);
-        else if (Approximately(pixel, Color.green)) SpawnSpecial(healingPrefab, pos);
-        else if (Approximately(pixel, Color.yellow)) SpawnSpecial(goldPrefab, pos);
-        else if (Approximately(pixel, new Color(0.5f, 0f, 0.5f))) SpawnSpecial(hazardPrefab, pos);
-        else if (Approximately(pixel, Color.blue)) SpawnSpecial(shopPrefab, pos);
-        else if (Approximately(pixel, Color.cyan) && player != null)
+        if (player != null)
+        {
             player.position = tile.transform.position + new Vector3(0, 0.5f, 0);
+            Debug.Log($"[Player Placed] at {tile.transform.position}");
+        }
+        else
+        {
+            Debug.LogWarning("[Player Not Assigned] Cannot place player!");
+        }
     }
+}
+
 
     void SpawnSpecial(GameObject prefab, Vector3Int gridPos)
     {
@@ -192,10 +255,10 @@ public class DungeonGenerator : Singleton<DungeonGenerator>
             int z = (gridPos.z / tileDistance) % layer.decorTexture.height;
             Color pixel = layer.decorTexture.GetPixel(x, z);
 
-            if (pixel.grayscale > 0.5f && Random.value < decorationDensity)
+            if (pixel.grayscale > 0.5f && UnityEngine.Random.value < decorationDensity)
             {
-                var prefab = layer.listOfDecor[Random.Range(0, layer.listOfDecor.Count)];
-                tile.PlaceDecor(prefab,layer.decorType);
+                var prefab = layer.listOfDecor[UnityEngine.Random.Range(0, layer.listOfDecor.Count)];
+                tile.PlaceDecor(prefab, layer.decorType);
             }
         }
     }
@@ -209,7 +272,7 @@ public class DungeonGenerator : Singleton<DungeonGenerator>
 
         if (tile.TryGetComponent<Renderer>(out var renderer))
         {
-            renderer.material.color = new Color(Random.Range(0.8f, 1f), Random.Range(0.8f, 1f), Random.Range(0.8f, 1f));
+            renderer.material.color = new Color(UnityEngine.Random.Range(0.8f, 1f), UnityEngine.Random.Range(0.8f, 1f), UnityEngine.Random.Range(0.8f, 1f));
         }
 
         return tile;
@@ -239,39 +302,19 @@ public class DungeonGenerator : Singleton<DungeonGenerator>
         {
             if (layer.decorTexture == null) continue;
             Color decorPixel = layer.decorTexture.GetPixel(x, z);
-            if (decorPixel.grayscale > 0.5f && Random.value < decorationDensity)
+            if (decorPixel.grayscale > 0.5f && UnityEngine.Random.value < decorationDensity)
                 return true;
         }
         return false;
     }
 
-    bool IsWithinDarkningRange(Vector3Int pos, HashSet<Vector3Int> corePositions)
-    {
-        for (int r = 1; r <= darkningRange; r++)
-        {
-            for (int dx = -r; dx <= r; dx++)
-            {
-                for (int dz = -r; dz <= r; dz++)
-                {
-                    if (Mathf.Abs(dx) != r && Mathf.Abs(dz) != r) continue;
-                    if (corePositions.Contains(pos + new Vector3Int(dx, 0, dz) * tileDistance))
-                        return true;
-                }
-            }
-        }
-        return false;
-    }
+bool Approximately(Color a, Color b, float tolerance = 0.2f)
+{
+    return Mathf.Abs(a.r - b.r) < tolerance &&
+           Mathf.Abs(a.g - b.g) < tolerance &&
+           Mathf.Abs(a.b - b.b) < tolerance;
+}
 
-    float GetPrefabHeightOffset(GameObject go)
-    {
-        Renderer r = go.GetComponentInChildren<Renderer>();
-        return r ? r.bounds.extents.y : 0f;
-    }
-
-    bool Approximately(Color a, Color b, float tolerance = 0.1f)
-    {
-        return Mathf.Abs(a.r - b.r) < tolerance && Mathf.Abs(a.g - b.g) < tolerance && Mathf.Abs(a.b - b.b) < tolerance;
-    }
 
     List<Vector3Int> GetAllPossibleDirections()
     {
@@ -292,26 +335,4 @@ public class DungeonGenerator : Singleton<DungeonGenerator>
         else Debug.Log("Dungeon generation in edit mode not implemented");
     }
 #endif
-}
-[System.Serializable]
-public class FloorData
-{
-    public Texture2D layoutTexture;
-    public List<DecorLayer> decorLayers = new List<DecorLayer>();
-    public int repeatCount = 1;
-}
-[System.Serializable]
-public class DecorLayer
-{
-    public Texture2D decorTexture;
-    public DecorType decorType;
-    public List<GameObject> listOfDecor = new List<GameObject>();
-
-}
-[System.Serializable]
-public enum DecorType
-{
-    Floor,
-    Wall,
-    Ceiling
 }

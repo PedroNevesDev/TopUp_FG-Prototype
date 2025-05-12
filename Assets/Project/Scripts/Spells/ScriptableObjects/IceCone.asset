@@ -12,21 +12,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7db659b895b60411cbcb7d4542c622a3, type: 3}
   m_Name: IceCone
   m_EditorClassIdentifier: 
-  attributes: 
+  attributes: 0100000002000000
   spellCategory: 0
   abilityType: 0
+  effectType: 2
   spellName: Blizzard
   spellDescription: Deals <color=blue>{0} ICE DAMAGE</color> in a area.
   spellIcon: {fileID: 21300000, guid: 27188973d10435f4bb1f8a2999a45da0, type: 3}
-  cooldownDuration: 0.5
+  cooldownDuration: 6
   spellPrefab: {fileID: 942125829524649685, guid: cf909d6b9b2e9da4882d091f459a55a6, type: 3}
   spawnOffset: {x: 0, y: -1, z: 0}
-  multicastCount: 5
+  multicastCount: 3
   multicastMaxAngle: 360
-  spellDuration: 0
+  useAngle: 1
+  spellDuration: 1
   canBeCanceled: 0
   bounces: 0
   isGrounded: 1
-  baseValue: 10
-  multiplierPerLevel: 1.1
-  abilityLevel: 1
+  effectorValue: 0.35
+  baseValue: 5
+  multiplierPerLevel: 0.3
+  abilityLevel: 2

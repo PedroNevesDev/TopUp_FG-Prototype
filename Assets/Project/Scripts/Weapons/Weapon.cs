@@ -162,7 +162,7 @@ public class Weapon : MonoBehaviour
         if (!other.CompareTag("Player")&&other.TryGetComponent(out Damageable target)&&canDamage)
         {
             canDamage = false;
-            target.TakeDamage(weaponData.weaponDamage * gsm.physicalEfficiency,weaponData.hasKnockback?(other.transform.position-cachedAnimator.transform.position).normalized*weaponData.knockback:Vector3.zero);
+            target.TakeDamage(weaponData.weaponDamage + weaponData.weaponDamage*gsm.physicalEfficiency,weaponData.hasKnockback?(other.transform.position-cachedAnimator.transform.position).normalized:Vector3.zero,weaponData.knockback);
             StopCoroutine(ApplyHitStop());
             StartCoroutine(ApplyHitStop());
         }

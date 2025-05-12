@@ -9986,7 +9986,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   spell: {fileID: 11400000, guid: fb94eb1647fd340db8a73de4c85ff68a, type: 2}
-  maxBounceCount: 3
   bounceLossMultiplier: 1
   throwForce: 13
   additionalGravity: 120
