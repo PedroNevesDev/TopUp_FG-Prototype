@@ -114,6 +114,7 @@ public class ObjectPool : Singleton<ObjectPool>
         if (!objectToPrefabMap.TryGetValue(objectToReturn, out GameObject prefab))
         {
             Debug.LogError("Could not determine original prefab for object: " + objectToReturn.name);
+            Destroy(objectToReturn);
             return;
         }
 

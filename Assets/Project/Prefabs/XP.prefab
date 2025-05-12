@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 4377737682705723817}
   - component: {fileID: 6739005997209792116}
   - component: {fileID: 5825884519791122897}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: XP
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4955,12 +4955,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 18412350447ac394f8d4b5e0ebff9ac3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  minExp: 25
-  maxExp: 31
-  initialImpulseForce: 2
-  upwardForce: 1
-  homingDuration: 0.5
-  collectibleDelay: 0.3
+  minEXP: 10
+  maxEXP: 20
+  attractionSpeed: 10
 --- !u!135 &5825884519791122897
 SphereCollider:
   m_ObjectHideFlags: 0

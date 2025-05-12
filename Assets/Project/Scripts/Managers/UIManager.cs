@@ -16,6 +16,9 @@ public class UIManager : Singleton<UIManager>
     public TextMeshProUGUI levelText;
     public TextMeshProUGUI exp;
 
+    [Header("Currency")]
+    public TextMeshProUGUI moneyText;
+
     [Header("Transition Settings")]
     [Range(0.1f, 5f)]
     public float damageTransitionSpeed = 2f;
@@ -46,6 +49,10 @@ public class UIManager : Singleton<UIManager>
             levelManager.TogglePause(true);
             pannel.ShowTransition(newList,levelManager.Restart);
         }
+    }
+    public void UpdateCurrecny(int ammount)
+    {
+        moneyText.text = ammount.ToString();
     }
 
     public void ShowDungeonMessage()
@@ -298,5 +305,10 @@ private IEnumerator ProcessLevelQueue()
         
         // Then animate to the new value
         UpdateExp(endExp, maxExp);
+    }
+
+    internal void UpdateCurrency()
+    {
+        
     }
 }

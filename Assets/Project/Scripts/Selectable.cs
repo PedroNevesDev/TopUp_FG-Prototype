@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -12,6 +13,14 @@ public class Selectable : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
     public float scaleDuration = 0.2f;
     
     private RectTransform rectTransform;
+
+
+    Action OnClick;
+    public Selectable Setup(Action onClick)
+    {
+        OnClick = onClick;
+        return this;
+    }
 
     void Start()
     {
@@ -36,14 +45,7 @@ public class Selectable : MonoBehaviour, IPointerEnterHandler, IPointerExitHandl
     // When the UI element is clicked
     public void OnPointerClick(PointerEventData eventData)
     {
-        if(gameObject.TryGetComponent(out Card c))
-        {
-            GlobalStatsManager.Instance.Pick(c);
-        }
-        else if(gameObject.TryGetComponent(out StatModifierCard ca))
-        {
-            GlobalStatsManager.Instance.Pick(ca);
-        }
+        OnClick?.Invoke();
     }
 
     // Coroutine to scale smoothly

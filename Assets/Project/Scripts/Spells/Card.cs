@@ -26,7 +26,7 @@ public class Card : MonoBehaviour
 
     public SpellSO SpellSO { get => spellSO; set => spellSO = value; }
 
-    public void Setup(SpellSO spellData)
+    public GameObject Setup(SpellSO spellData)
     {
         SetText(spellData.cooldownDuration);
         spellSO = spellData;
@@ -39,7 +39,7 @@ public class Card : MonoBehaviour
 
         spellData.attributes.ForEach(a=> attributes+=", "+a.ToString());
         cardTags.text = spellData.spellCategory.ToString() + attributes;
-
+        return gameObject;
     }
     void FixedUpdate()
     {

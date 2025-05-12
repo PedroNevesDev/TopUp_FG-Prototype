@@ -45,7 +45,7 @@ List<GameObject> GetAvailableObjects(Transform t)
     return listOfGameObjects;
 }
 
-public void PlaceDecor(GameObject prefab, DecorType decorType)
+public GameObject PlaceDecor(GameObject prefab, DecorType decorType)
 {
     List<GameObject> availableObjects = new List<GameObject>();
 
@@ -66,7 +66,7 @@ public void PlaceDecor(GameObject prefab, DecorType decorType)
             // add when ceiling system exists
             break;
     }
-    if(availableObjects.Count<=0) return;
+    if(availableObjects.Count<=0) return null;
     GameObject randomObj = availableObjects[Random.Range(0,availableObjects.Count)];
 
 
@@ -80,7 +80,9 @@ public void PlaceDecor(GameObject prefab, DecorType decorType)
     obj.transform.forward = randomObj.transform.parent.right;
 
     obj.transform.position = randomObj.transform.position;
+
     occupied.Add(randomObj,obj);
+    return obj;
 }
 
     public void Connect(SuperTile other, Vector3Int direction)

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using TMPro;
 using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -41,6 +42,69 @@ public float rotationSmoothness = 5f;
     private float currentExp=0;
 
     float maxHp=70;
+
+    [Header("Interaction")]
+public float interactRadius = 2.5f;
+public LayerMask whatIsInteractable;
+public Transform interactablePointer;
+private IInteractable currentInteractable;
+private Transform currentInteractableTransform;
+
+public TextMeshProUGUI interactText;
+void CheckForInteractables()
+{
+    Collider[] hits = Physics.OverlapSphere(transform.position, interactRadius, whatIsInteractable);
+
+    IInteractable closest = null;
+    float closestDistance = Mathf.Infinity;
+
+    foreach (Collider hit in hits)
+    {
+        if (hit.TryGetComponent(out IInteractable interactable))
+        {
+            float distance = Vector3.Distance(transform.position, hit.transform.position);
+            if (distance < closestDistance)
+            {
+                closest = interactable;
+                closestDistance = distance;
+                currentInteractableTransform = hit.transform;
+            }
+        }
+    }
+
+    // If we found something new
+    if (closest != null && closest != currentInteractable)
+    {
+        currentInteractable?.OnInterrupt(); // interrupt previous one
+        currentInteractable = closest;
+
+        if (interactablePointer != null)
+        {
+            interactablePointer.position = currentInteractableTransform.position;
+            // Set pointer UI text here if applicable
+            
+            ShowInteractable(currentInteractable.InteractName);
+        }
+    }
+    // If nothing found and we had one before
+    else if (closest == null && currentInteractable != null)
+    {
+        currentInteractable.OnInterrupt();
+        currentInteractable = null;
+        currentInteractableTransform = null;
+        HideInteractable(); // hide UI
+    }
+}
+public void ShowInteractable(string name)
+{
+    interactText.gameObject.SetActive(true);
+    interactText.text = $"[E] {name}";
+}
+
+public void HideInteractable()
+{
+    interactText.gameObject.SetActive(false);
+}
     void Start()
     {
         uiManager = UIManager.Instance;
@@ -177,7 +241,12 @@ void FixedUpdate()
 
     void Update()
     {
+        CheckForInteractables();
         CheckForEnemies();
+        if(Input.GetKeyDown(KeyCode.E)&&currentInteractable!=null)
+        {
+            currentInteractable.OnInteract();
+        }
         if (Keyboard.current == null) return; // Prevents null reference errors
 
         foreach (var key in bindedSpells.Keys) // Only check bound keys

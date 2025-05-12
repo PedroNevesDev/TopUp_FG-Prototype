@@ -574,8 +574,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   targetColor: {r: 1, g: 1, b: 1, a: 0}
+  updateBar: 0
   meshRenderer: {fileID: 7352396536165240749}
   health: 170
+  baseHealth: 70
   maxHealth: 170
   healthBar: {fileID: 8029274638457189393}
   damageBar: {fileID: 3381118625123113611}
@@ -590,7 +592,7 @@ MonoBehaviour:
     max: 2
   attackCollision: {fileID: 7227974040662706800}
   damageArea: {fileID: 1043202911866749714}
-  attackpreptime: 0.2
+  attackpreptime: 0.35
   target: {fileID: 0}
   maskTarget: {fileID: 6435098127564212906}
   objectToSpawn: {fileID: 1307802998799835269, guid: d93185f5650cd4a828a0e2faff34a0cb, type: 3}

@@ -20,6 +20,8 @@ public class Stat : ScriptableObject
     public string format = "+{0} {1}";
 
     public string smallDescription = "Description";
+
+    public int shopPrice = 70;
     public void RollValue()
     {
         if(displayMode==StatDisplayMode.Flat)

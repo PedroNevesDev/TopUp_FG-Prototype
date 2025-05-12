@@ -1,108 +1,65 @@
 using UnityEngine;
-using DG.Tweening;
-using System.Collections;
 
-[RequireComponent(typeof(Rigidbody), typeof(Collider))]
-public class XPOrb : MonoBehaviour
+[RequireComponent(typeof(Collider))]
+public class XPOrb : MonoBehaviour, IAttractable
 {
-    public float minExp, maxExp;
-    public float initialImpulseForce = 2f;
-    public float upwardForce = 1f;
-    public float homingDuration = 0.5f;
-    public float collectibleDelay = 0.4f; // Delay before orb can be collected
+    public int minEXP = 1;
+    public int maxEXP = 5;
+    public float attractionSpeed = 10f;
+    private bool isBeingAttracted = false;
+    private Transform target;
 
-    private bool isHoming = false;
-    private float spawnTime;
+    private ParticleSystem particleSystem;
 
-    PlayerController player;
-
-private void OnEnable()
-{
-    spawnTime = Time.time;
-    isHoming = false;
-    player = null;
-
-    // Reset any tweens
-    transform.DOKill();
-
-    // Restart particles
-    if(TryGetComponent(out ParticleSystem ps))
+    void Awake()
     {
-        ps.Clear();
-        ps.Play();
+        particleSystem = GetComponent<ParticleSystem>();
     }
-}
 
-    private void OnTriggerEnter(Collider other)
+    void OnEnable()
     {
-        if (isHoming) return;
+        isBeingAttracted = false;
+        target = null;
 
-        // Prevent early collection
-        if (Time.time - spawnTime < collectibleDelay) return;
-
-        if (other.TryGetComponent(out PlayerController player))
+        // Reset and play the particle system
+        if (particleSystem != null)
         {
-            isHoming = true;
-            Rigidbody rb = GetComponent<Rigidbody>();
-            rb.isKinematic = false;
-            rb.linearVelocity = Vector3.zero;
+            particleSystem.Clear(true);
+            particleSystem.Play(true);
+        }
+    }
 
-            Vector3 randomDir = Random.insideUnitSphere;
-            randomDir.y = 0f;
-            Vector3 impulse = (randomDir.normalized * initialImpulseForce) + Vector3.up * upwardForce;
-            rb.AddForce(impulse, ForceMode.Impulse);
+    void Update()
+    {
+        if (!isBeingAttracted || target == null) return;
 
-            this.player = player;
-            StartCoroutine(DelayedHoming(player.transform, 0.1f));
+        transform.position = Vector3.MoveTowards(transform.position, target.position, attractionSpeed * Time.deltaTime);
+    }
+
+    public void AttractTo(Transform playerTransform)
+    {
+        isBeingAttracted = true;
+        target = playerTransform;
+    }
+
+    public bool CanBeAttracted()
+    {
+        return true; // Optional logic (e.g., cooldown, only if visible, etc.)
+    }
+
+    void OnTriggerEnter(Collider other)
+    {
+
+        PlayerController player = other.GetComponent<PlayerController>();
+        if (player != null)
+        {
+            int xp = Random.Range(minEXP, maxEXP + 1);
+            player.AddEXP(xp);
+            ObjectPool.Instance?.ReturnObject(gameObject); // Safe pooling fallback
         }
 
-    }
-        private void OnTriggerStay(Collider other)
-    {
-        if (isHoming) return;
+        // Use pooling if you have it, otherwise destroy
 
-        // Prevent early collection
-        if (Time.time - spawnTime < collectibleDelay) return;
-
-        if (other.TryGetComponent(out PlayerController player))
-        {
-            isHoming = true;
-            Rigidbody rb = GetComponent<Rigidbody>();
-            rb.isKinematic = false;
-            rb.linearVelocity = Vector3.zero;
-
-            Vector3 randomDir = Random.insideUnitSphere;
-            randomDir.y = 0f;
-            Vector3 impulse = (randomDir.normalized * initialImpulseForce) + Vector3.up * upwardForce;
-            rb.AddForce(impulse, ForceMode.Impulse);
-
-            this.player = player;
-            StartCoroutine(DelayedHoming(player.transform, 0.1f));
-        }
-
-    }
-
-    private IEnumerator DelayedHoming(Transform playerTarget, float delay)
-    {
-        yield return new WaitForSeconds(delay);
-        StartHoming(playerTarget);
-    }
-
-    void StartHoming(Transform playerTarget)
-    {
-        Rigidbody rb = GetComponent<Rigidbody>();
-        rb.linearVelocity = Vector3.zero;
-        rb.isKinematic = true;
-
-        transform.DOMove(playerTarget.position, homingDuration)
-            .SetEase(Ease.InQuad)
-            .OnComplete(Disappear);
-    }
-
-    void Disappear()
-    {
-        player.AddEXP(Random.Range(minExp, maxExp));
-        player = null;
-        ObjectPool.Instance.ReturnObject(gameObject);
+        // Destroy(gameObject); // fallback if no pooling
     }
 }

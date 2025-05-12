@@ -16,8 +16,8 @@ TagManager:
   - Player
   - MapStructure
   - Enemy
-  - 
-  - 
+  - Interactable
+  - Attractable
   - 
   - 
   - 

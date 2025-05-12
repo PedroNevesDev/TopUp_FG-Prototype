@@ -8,6 +8,7 @@ public class Damageable : MonoBehaviour
 {
     [Header("Color Change")]
     public Color targetColor;
+    public bool updateBar;
     Color initialColor;
 
     protected float slow = 0;
@@ -36,21 +37,7 @@ public class Damageable : MonoBehaviour
 
     public List<DropData> drops = new List<DropData>();
 
-    [System.Serializable]
-    public class DropData
-    {
-        public GameObject drop;
-        public int min, max;
 
-        public void Drop(Vector3 pos)
-        {
-            int quantity = Random.Range(min,max+1);
-            for(int i = 0;i<quantity;i++)
-            {
-                ObjectPool.Instance.GetObject(drop,pos,Quaternion.identity).GetComponent<Rigidbody>().AddForce(new Vector3(Random.Range(0f,1f),Random.Range(0f,1f),Random.Range(0f,1f)),ForceMode.Impulse);
-            }
-        }
-    }
     void Start()
     {
         initialColor = meshRenderer.sharedMaterial.color;
@@ -113,6 +100,8 @@ public class Damageable : MonoBehaviour
             rb.AddForce(dirKnockback.normalized*knockbackForce,ForceMode.Impulse);
         }
         CheckHealth();
+
+        if(updateBar)
         UpdateBar();
         if (shakeEffect)
         {
@@ -201,3 +190,18 @@ public enum EffectType
     Frost,
     Eletracute
 }
+    [System.Serializable]
+    public class DropData
+    {
+        public GameObject drop;
+        public int min, max;
+
+        public void Drop(Vector3 pos)
+        {
+            int quantity = Random.Range(min,max+1);
+            for(int i = 0;i<quantity;i++)
+            {
+                ObjectPool.Instance.GetObject(drop,pos,Quaternion.identity).GetComponent<Rigidbody>().AddForce(new Vector3(Random.Range(0f,1f),Random.Range(0f,1f),Random.Range(0f,1f)),ForceMode.Impulse);
+            }
+        }
+    }

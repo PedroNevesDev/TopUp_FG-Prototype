@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -20,11 +21,16 @@ public class FloorData
 [System.Serializable]
 public class DecorLayer
 {
-    public Texture2D decorTexture;   // The texture for decorations
-    public List<GameObject> listOfDecor = new List<GameObject>();  // The list of possible decoration objects
-    public DecorType decorType;      // The type of decoration (could be specific to your design)
+    public string layerName;
+    public Texture2D decorTexture;
+    public List<GameObject> listOfDecor = new List<GameObject>();
+    public DecorType decorType;
 
+    [Tooltip("Maximum number of decorations from this layer that can be placed.")]
+    public int maxCount = 100;  // or any default you prefer
 
+    [NonSerialized]
+    public List<Vector3Int> cachedTiles = new(); // <- Transient, cleared per floor
 }
     public enum DecorType
     {

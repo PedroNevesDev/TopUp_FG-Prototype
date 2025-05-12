@@ -52,6 +52,8 @@ public class SpellSO : ScriptableObject
     Card myCard;
     GlobalStatsManager gsm;
 
+    public int shopPrice = 150;
+
     // Called when SO is loaded or recompiled
     private void OnEnable()
     {
@@ -78,7 +80,7 @@ public class SpellSO : ScriptableObject
     {
         multicastCount = defaultMulticastCount;
         bounces = defaultBounces;
-        abilityLevel = defaultAbilityLevel;
+        abilityLevel = 1;
         spellDuration = defaultSpellDuration;
         cooldownDuration = defaultCooldownDuration;
         baseValue = defaultBaseValue;

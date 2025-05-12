@@ -166,6 +166,12 @@ public class Weapon : MonoBehaviour
             StopCoroutine(ApplyHitStop());
             StartCoroutine(ApplyHitStop());
         }
+
+        if(other.TryGetComponent(out Breakables obj)&&canDamage)
+        {
+            obj.TakeDamage(weaponData.weaponDamage + weaponData.weaponDamage*gsm.physicalEfficiency);
+        }
+
     }
     public void SetAnimator(Animator animator)
     {

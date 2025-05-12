@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System;
 using System.Collections;
+using System.Linq;
 
 public class DungeonGenerator : Singleton<DungeonGenerator>
 {
@@ -47,6 +48,8 @@ public class DungeonGenerator : Singleton<DungeonGenerator>
     public List<MapData> mapDatas = new List<MapData>();
     private MapData lastMap;
 
+    private List<GameObject> activeDecor = new List<GameObject>();
+
     void Start()
     {
         if (generateOnStart)
@@ -56,6 +59,7 @@ public class DungeonGenerator : Singleton<DungeonGenerator>
     public void Regenerate()
     {
         LevelManager.Instance.TogglePause(false);
+        
         GenerateDungeonImmediate(UIManager.Instance.ResetTransition);
     }
 
@@ -84,14 +88,24 @@ public class DungeonGenerator : Singleton<DungeonGenerator>
     }
     #region Dungeon Generation
 
-   public void GenerateDungeonImmediate(Action action = null)
+public void GenerateDungeonImmediate(Action action = null)
 {
     if (isGenerating) return;
     isGenerating = true;
 
+        foreach (var decor in activeDecor)
+        {
+            if (decor != null)
+                ObjectPool.Instance.ReturnObject(decor);
+        }
+    activeDecor.Clear();
+
     MapData newMap = GetRandomMap();
     while (newMap == lastMap)
         newMap = GetRandomMap();
+
+    lastMap = newMap;
+
 
     ClearDungeon();
     grid.Clear();
@@ -100,9 +114,8 @@ public class DungeonGenerator : Singleton<DungeonGenerator>
     foreach (var floor in newMap.floors)
     {
         int baseY = 0;
-        List<Vector3Int> tilePositions = new();
+
         Dictionary<Vector3Int, Color> specialPixels = new();
-        Dictionary<Vector3Int, FloorData> decorSources = new();
 
         for (int r = 0; r < floor.repeatCount; r++)
         {
@@ -116,32 +129,33 @@ public class DungeonGenerator : Singleton<DungeonGenerator>
                     if (pixel.grayscale <= 0.5f) continue;
 
                     Vector3Int pos = new(x * tileDistance, baseY, z * tileDistance);
-                    tilePositions.Add(pos);
+
+                    SuperTile tile = SpawnTile(pos);
+                    grid[pos] = tile;
+                    spawnedTiles.Add(tile);
 
                     if (IsSpecialColor(pixel))
                         specialPixels[pos] = pixel;
 
-                    if (HasDecorAt(floor, x, z))
-                        decorSources[pos] = floor;
+                    CollectEligibleDecorTiles(pos, floor);
                 }
             }
+
             baseY += tileDistance;
         }
 
-        foreach (var pos in tilePositions)
+        // Place decor after collecting all valid positions
+        PlaceDecorationsFromCache(floor, grid);
+
+        // Handle special objects
+        foreach (var kvp in specialPixels)
         {
-            SuperTile tile = SpawnTile(pos);
-            grid[pos] = tile;
-            spawnedTiles.Add(tile);
-
-            if (specialPixels.TryGetValue(pos, out var color))
-                HandleSpecial(color, pos, tile);
-
-            if (decorSources.TryGetValue(pos, out var floorData))
-                PlaceDecorations(tile, floorData, pos);
+            if (grid.TryGetValue(kvp.Key, out var tile))
+                HandleSpecial(kvp.Value, kvp.Key, tile);
         }
     }
 
+    // Connect tiles
     foreach (var kvp in grid)
     {
         foreach (var dir in GetAllPossibleDirections())
@@ -156,6 +170,7 @@ public class DungeonGenerator : Singleton<DungeonGenerator>
         FillWithDarkningTiles();
 
     spawnedTiles.ForEach(tile => tile.RandomlyReplaceWalls());
+
     isGenerating = false;
     action?.Invoke();
 }
@@ -219,11 +234,9 @@ public class DungeonGenerator : Singleton<DungeonGenerator>
 
 void HandleSpecial(Color pixel, Vector3Int pos, SuperTile tile)
 {
-    Debug.Log($"[Special Color Detected] at {pos}: r={pixel.r:F2}, g={pixel.g:F2}, b={pixel.b:F2}");
 
-    if (Approximately(pixel, Color.red))
-        SpawnSpecial(enemyPrefab, pos);
-    else if (Approximately(pixel, Color.cyan))
+
+    if (Approximately(pixel, Color.cyan))
     {
         if (player != null)
         {
@@ -245,23 +258,50 @@ void HandleSpecial(Color pixel, Vector3Int pos, SuperTile tile)
         Instantiate(prefab, spawnPos, Quaternion.identity, transform);
     }
 
-    void PlaceDecorations(SuperTile tile, FloorData floorData, Vector3Int gridPos)
+void PlaceDecorationsFromCache(FloorData floorData, Dictionary<Vector3Int, SuperTile> tileGrid)
+{
+    foreach (var layer in floorData.decorLayers)
     {
-        foreach (var layer in floorData.decorLayers)
+        if (layer.cachedTiles == null || layer.cachedTiles.Count == 0 || layer.listOfDecor.Count == 0)
+            continue;
+
+        // Pick up to maxCount unique positions
+        int count = Mathf.Min(layer.maxCount, layer.cachedTiles.Count);
+        var selectedTiles = layer.cachedTiles.OrderBy(_ => UnityEngine.Random.value).Take(count);
+
+        foreach (var pos in selectedTiles)
         {
-            if (layer.decorTexture == null || layer.listOfDecor.Count == 0) continue;
+            if (!tileGrid.TryGetValue(pos, out var tile)) continue;
 
-            int x = (gridPos.x / tileDistance) % layer.decorTexture.width;
-            int z = (gridPos.z / tileDistance) % layer.decorTexture.height;
-            Color pixel = layer.decorTexture.GetPixel(x, z);
+        GameObject prefab = layer.listOfDecor[UnityEngine.Random.Range(0, layer.listOfDecor.Count)];
+        GameObject decorObj = tile.PlaceDecor(prefab, layer.decorType);
+        if (decorObj != null)
+            activeDecor.Add(decorObj);
+        }
 
-            if (pixel.grayscale > 0.5f && UnityEngine.Random.value < decorationDensity)
-            {
-                var prefab = layer.listOfDecor[UnityEngine.Random.Range(0, layer.listOfDecor.Count)];
-                tile.PlaceDecor(prefab, layer.decorType);
-            }
+        layer.cachedTiles.Clear(); // Clean for next time
+    }
+}
+void CollectEligibleDecorTiles(Vector3Int gridPos, FloorData floorData)
+{
+    foreach (var layer in floorData.decorLayers)
+    {
+        if (layer.decorTexture == null || layer.listOfDecor.Count == 0)
+            continue;
+
+        if (layer.cachedTiles == null)
+            layer.cachedTiles = new List<Vector3Int>();
+
+        int x = (gridPos.x / tileDistance) % layer.decorTexture.width;
+        int z = (gridPos.z / tileDistance) % layer.decorTexture.height;
+
+        Color pixel = layer.decorTexture.GetPixel(x, z);
+        if (pixel.grayscale > 0.5f && UnityEngine.Random.value < decorationDensity)
+        {
+            layer.cachedTiles.Add(gridPos);
         }
     }
+}
 
     SuperTile SpawnTile(Vector3Int gridPos)
     {

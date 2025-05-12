@@ -69,6 +69,11 @@ public class GlobalStatsManager : Singleton<GlobalStatsManager>
     {
         spells.ForEach(s=>s.ResetToDefaults());
     }
+
+    public bool IsPicksActive()
+    {
+        return rollsPannel.activeSelf;
+    }
 public void GeneratePicks()
 {
     rollsPannel.SetActive(true);
@@ -129,10 +134,49 @@ public void GeneratePicks()
             }
         }
     }
-    instances.ForEach(i => i.AddComponent<Selectable>());
+    instances.ForEach(i => i.AddComponent<Selectable>().Setup(()=>Pick(i)));
+}
+public List<SpellSO> GetRandomCards(int count)
+{
+    List<SpellSO> tempSpells = new List<SpellSO>(spells);
+
+    List<SpellSO> pickedSpells = new List<SpellSO>();
+    for(int i = 0; i < count; i++)
+    {
+        if(tempSpells.Count ==0)break;
+        SpellSO randomSpell = tempSpells[Random.Range(0,tempSpells.Count)];
+        tempSpells.Remove(randomSpell);
+        pickedSpells.Add(randomSpell);
+    }
+    return pickedSpells;
 }
 
+public List<Stat> GetRandomStats(int count)
+{
+    List<Stat> tempSpells = new List<Stat>(allStats);
 
+    List<Stat> pickedSpells = new List<Stat>();
+    for(int i = 0; i < count; i++)
+    {
+        if(tempSpells.Count ==0)break;
+        Stat randomSpell = tempSpells[Random.Range(0,tempSpells.Count)];
+        randomSpell.RollValue();
+        tempSpells.Remove(randomSpell);
+        pickedSpells.Add(randomSpell);
+    }
+    return pickedSpells;
+}
+public void Pick(GameObject card)
+{
+    if(card.TryGetComponent(out Card c))
+    {
+        Instance.Pick(c);
+    }
+    else if(card.TryGetComponent(out StatModifierCard ca))
+    {
+        Pick(ca);
+    }
+}
 public void Pick(Card card)
 {
     rollContent.parent.gameObject.SetActive(false);
@@ -150,7 +194,7 @@ public void GenerateRandomCard()
 {
     CardManager.Instance.AddCard(spells[Random.Range(0, spells.Count)]);
 }
-void ApplyStat(Stat stat)
+public void ApplyStat(Stat stat)
 {
 switch (stat.type)
 {
